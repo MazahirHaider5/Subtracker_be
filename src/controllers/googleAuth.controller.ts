@@ -13,7 +13,7 @@ passport.use(
     {
       clientID: process.env.GOOGLE_CLIENT_ID as string,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
-      callbackURL: "http://localhost:3000/auth/google/callback"
+      callbackURL: "https://sub-tracker-pdixdt6vm-mazahir-haiders-projects.vercel.app/auth/google/callback"
     },
     async (
       accessToken: string,
