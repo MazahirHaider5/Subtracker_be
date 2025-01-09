@@ -3,3 +3,5 @@ node_modules
 .env
 dist
 .vercel
+/config/AuthKey_738W8HRUV9.p8
+

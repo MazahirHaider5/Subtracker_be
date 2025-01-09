@@ -3,6 +3,7 @@ import passport from "passport";
 import AppleStrategy from "passport-apple";
 import User from "../models/users.model";
 import fs from "fs";
+import path from "path";
 
 passport.use(
   new AppleStrategy(
@@ -10,7 +11,7 @@ passport.use(
       clientID: process.env.APPLE_CLIENT_ID as string,
       teamID: process.env.APPLE_TEAM_ID as string,
       keyID: process.env.APPLE_KEY_ID as string,
-      privateKeyString: process.env.APPLE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+      privateKeyString: fs.readFileSync(path.resolve(__dirname, '..', process.env.APPLE_PRIVATE_KEY_PATH || ''), 'utf8'),
       callbackURL: process.env.APPLE_REDIRECT_URI as string,
       passReqToCallback: true, 
     },
