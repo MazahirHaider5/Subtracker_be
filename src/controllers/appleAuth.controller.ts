@@ -4,6 +4,16 @@ import AppleStrategy from "passport-apple";
 import User from "../models/users.model";
 import fs from "fs";
 import path from "path";
+import crypto from "crypto"; 
+
+// Get the Base64-encoded private key from environment variables
+const privateKeyBase64 = process.env.APPLE_PRIVATE_KEY_BASE64;
+if (!privateKeyBase64) {
+  throw new Error("APPLE_PRIVATE_KEY_BASE64 environment variable is not set");
+}
+
+// Decode the Base64-encoded private key
+const privateKeyString = Buffer.from(privateKeyBase64, 'base64').toString('utf8');
 
 passport.use(
   new AppleStrategy(
@@ -11,9 +21,9 @@ passport.use(
       clientID: process.env.APPLE_CLIENT_ID as string,
       teamID: process.env.APPLE_TEAM_ID as string,
       keyID: process.env.APPLE_KEY_ID as string,
-      privateKeyString: fs.readFileSync(path.resolve(__dirname, '..', process.env.APPLE_PRIVATE_KEY_PATH || ''), 'utf8'),
+      privateKeyString: privateKeyString,
       callbackURL: process.env.APPLE_REDIRECT_URI as string,
-      passReqToCallback: true, 
+      passReqToCallback: true,
     },
     async (
       req: Request,
@@ -46,7 +56,7 @@ passport.use(
 );
 
 // Route to start Apple login
-export const loginWithApple = passport.authenticate("apple", {scope: ["email","name"]});
+export const loginWithApple = passport.authenticate("apple", { scope: ["email", "name"] });
 
 // Apple callback route
 export const appleCallback = (req: Request, res: Response) => {
@@ -56,4 +66,3 @@ export const appleCallback = (req: Request, res: Response) => {
     user: req.user,
   });
 };
-//
