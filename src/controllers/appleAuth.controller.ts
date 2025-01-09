@@ -10,7 +10,7 @@ passport.use(
       clientID: process.env.APPLE_CLIENT_ID as string,
       teamID: process.env.APPLE_TEAM_ID as string,
       keyID: process.env.APPLE_KEY_ID as string,
-      privateKeyString: fs.readFileSync(process.env.APPLE_PRIVATE_KEY_PATH as string, "utf8"),
+      privateKeyString: process.env.APPLE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
       callbackURL: process.env.APPLE_REDIRECT_URI as string,
       passReqToCallback: true, 
     },
