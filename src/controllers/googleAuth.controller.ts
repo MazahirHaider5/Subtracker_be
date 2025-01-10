@@ -15,12 +15,8 @@ passport.use(
       clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
       callbackURL: "https://subtracker-be.onrender.com/auth/google/callback"
     },
-    async (
-      accessToken: string,
-      refreshToken: string,
-      profile: Profile,
-      done: VerifyCallback
-    ) => {
+    async (accessToken: string, refreshToken: string, profile: Profile, done: VerifyCallback) => {
+      console.log("Google Profile: ", profile); // Log profile data here
       try {
         let user = await User.findOne({ email: profile.emails?.[0].value });
         if (!user) {
@@ -36,12 +32,7 @@ passport.use(
         }
         const newAccessToken = generateAccessToken(user);
         const newRefreshToken = generateRefreshToken(user);
-
-        done(null, {
-          user,
-          accessToken: newAccessToken,
-          refreshToken: newRefreshToken
-        });
+        done(null, { user, accessToken: newAccessToken, refreshToken: newRefreshToken });
       } catch (error) {
         done(error, false);
       }
