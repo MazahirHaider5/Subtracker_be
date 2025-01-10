@@ -4,7 +4,7 @@ import { hashPassword, comparePassword } from "../utils/bcrytp";
 import { generateAccessToken, generateRefreshToken } from "../utils/jwt";
 import { sendMail } from "../utils/sendMail";
 import { uploadImageOnly } from "../config/multer";
-import jwt  from "jsonwebtoken";
+import jwt from "jsonwebtoken";
 // Helper function to get user by ID or email
 const findUser = async (id: string | undefined, email?: string) => {
   let user;
@@ -23,13 +23,17 @@ export const getUsers = async (req: Request, res: Response) => {
     if (id || email) {
       const user = await findUser(id as string, email as string);
       if (!user) {
-        return res.status(404).json({ success: false, message: "User not found" });
+        return res
+          .status(404)
+          .json({ success: false, message: "User not found" });
       }
       return res.status(200).json({ success: true, data: user });
     }
     const users = await User.find().select("-password");
     if (!users || users.length === 0) {
-      return res.status(404).json({ success: false, message: "No users found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "No users found" });
     }
     return res.status(200).json({ success: true, data: users });
   } catch (error) {
@@ -44,17 +48,22 @@ export const getUsers = async (req: Request, res: Response) => {
 
 // Create a new user
 export const createUser = async (req: Request, res: Response) => {
-  const { email, name, password} = req.body;
+  const { email, name, password } = req.body;
   console.log("dataaaa", req.body);
-  if (!email || !name || !password ) {
-    return res.status(400).json({ success: false, message: "Missing required fields" });
+  if (!email || !name || !password) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Missing required fields" });
   }
 
   try {
     // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(409).json({ success: false, message: "User with this email already exists" });
+      return res.status(409).json({
+        success: false,
+        message: "User with this email already exists"
+      });
     }
 
     // Hash the password
@@ -81,7 +90,8 @@ export const createUser = async (req: Request, res: Response) => {
 
     return res.status(201).json({
       success: true,
-      message: "User created successfully. Please verify your OTP to complete registration."
+      message:
+        "User created successfully. Please verify your OTP to complete registration."
     });
   } catch (error) {
     console.error("Error creating user:", error);
@@ -97,13 +107,17 @@ export const verifySignupOtp = async (req: Request, res: Response) => {
   const { email, otp } = req.body;
 
   if (!email || !otp) {
-    return res.status(400).json({ success: false, message: "Email and OTP are required" });
+    return res
+      .status(400)
+      .json({ success: false, message: "Email and OTP are required" });
   }
 
   try {
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
     }
 
     if (user.otp !== otp) {
@@ -111,7 +125,9 @@ export const verifySignupOtp = async (req: Request, res: Response) => {
     }
 
     if (user.otp_expiry && new Date() > user.otp_expiry) {
-      return res.status(400).json({ success: false, message: "OTP has expired" });
+      return res
+        .status(400)
+        .json({ success: false, message: "OTP has expired" });
     }
 
     user.is_verified = true;
@@ -132,7 +148,6 @@ export const verifySignupOtp = async (req: Request, res: Response) => {
     });
   }
 };
-
 
 export const updateUser = [
   uploadImageOnly.single("photo"),
@@ -176,8 +191,98 @@ export const updateUser = [
       return res.status(500).json({
         success: false,
         message: "Internal server error",
-        error: (error as Error).message,
+        error: (error as Error).message
       });
     }
   }
 ];
+
+export const changeLanguage = async (req: Request, res: Response) => {
+  try {
+    const token = req.cookies.accessToken;
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized. token not provided"
+      });
+    }
+    const decodedToken = jwt.verify(token, process.env.JWT_SECRET!) as {
+      id: string;
+    };
+    const userId = decodedToken.id;
+
+    const { language } = req.body;
+    if (!language) {
+      return res.status(400).json({
+        success: false,
+        message: "Language is required"
+      });
+    }
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { language },
+      { new: true }
+    );
+    if (!updateUser) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+    res.status(200).json({
+      success: true,
+      message: "Language updated successfully",
+      user: updatedUser
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error updating language",
+    });
+  }
+};
+
+export const changeCurrency = async (req: Request, res: Response) => {
+  try {
+    const token = req.cookies.accessToken;
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized. token not provided"
+      });
+    }
+    const decodedToken = jwt.verify(token, process.env.JWT_SECRET!) as {
+      id: string;
+    };
+    const userId = decodedToken.id;
+
+    const { currency } = req.body;
+    if (!currency) {
+      return res.status(400).json({
+        success: false,
+        message: "Currency is required"
+      });
+    }
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { currency },
+      { new: true }
+    );
+    if (!updateUser) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+    res.status(200).json({
+      success: true,
+      message: "Currency updated successfully",
+      user: updatedUser
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error updating currency",
+    });
+  }
+};

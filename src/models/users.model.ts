@@ -16,6 +16,8 @@ export interface IUser extends Document {
   is_verified: boolean;
   reset_token?: string;
   reset_token_expiry?: Date;
+  language: string;
+  currency: string;
 }
 
 // Mongoose schema
@@ -36,10 +38,10 @@ const UserSchema: Schema = new Schema<IUser>({
   },
   password: {
     type: String,
-    default: "",
+    default: ""
   },
   photo: {
-    type: String,
+    type: String
   },
   stripe_customer_id: {
     type: String,
@@ -60,8 +62,15 @@ const UserSchema: Schema = new Schema<IUser>({
   is_verified: {
     type: Boolean,
     default: false
+  },
+  language: {
+    type: String,
+    default: "English"
+  },
+  currency: {
+    type: String,
+    default: "US"
   }
 });
 
-// Export the Mongoose model
 export default mongoose.model<IUser>("User", UserSchema);
