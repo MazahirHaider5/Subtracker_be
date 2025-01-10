@@ -54,13 +54,14 @@ export const createUser = async (req: Request, res: Response) => {
       return res.status(409).json({ success: false, message: "User with this email already exists" });
     }
     const hashedPassword = await hashPassword(password);
-    const generatedOTP=Math.floor(100000 + Math.random() * 900000).toString();
+    const generatedOTP = Math.floor(1000 + Math.random() * 9000).toString();
+    
     const newUser = new User({
       email,
       name,
       password: hashedPassword,
       user_type,
-      otp: generatedOTP, // You can implement OTP logic here
+      otp: generatedOTP, 
       otp_expiry: new Date(Date.now() + 10 * 60 * 1000) // 10 minutes expiry
     });
     await newUser.save();
