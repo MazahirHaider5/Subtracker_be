@@ -12,12 +12,14 @@ import {
 } from "../controllers/googleAuth.controller";
 import { verifyToken } from "../middleware/authenticate";
 import { verifyAccessToken } from "../utils/jwt";
-import { createUser } from "../controllers/user.controllers";
+import { createUser, verifySignupOtp } from "../controllers/user.controllers";
 import { appleCallback, loginWithApple } from "../controllers/appleAuth.controller";
 
 const router = express.Router();
 
 router.post("/signUp", createUser);
+router.post("/verifyOtp", verifySignupOtp);
+
 router.post("/login", login);
 
 router.post("/requestOtp", requestOtp);

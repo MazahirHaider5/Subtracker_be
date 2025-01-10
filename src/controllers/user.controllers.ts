@@ -44,31 +44,45 @@ export const getUsers = async (req: Request, res: Response) => {
 
 // Create a new user
 export const createUser = async (req: Request, res: Response) => {
-  const { email, name, password, user_type } = req.body;
-  if (!email || !name || !password || !user_type) {
+  const { email, name, password} = req.body;
+  console.log("dataaaa", req.body);
+  if (!email || !name || !password ) {
     return res.status(400).json({ success: false, message: "Missing required fields" });
   }
+
   try {
+    // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(409).json({ success: false, message: "User with this email already exists" });
     }
+
+    // Hash the password
     const hashedPassword = await hashPassword(password);
+
+    // Generate a 4-digit OTP
     const generatedOTP = Math.floor(1000 + Math.random() * 9000).toString();
-    
+
+    // Create a new user with is_verified set to false
     const newUser = new User({
       email,
       name,
       password: hashedPassword,
-      user_type,
-      otp: generatedOTP, 
-      otp_expiry: new Date(Date.now() + 10 * 60 * 1000) // 10 minutes expiry
+      user_type: "",
+      otp: generatedOTP,
+      otp_expiry: new Date(Date.now() + 10 * 60 * 1000), // 10 minutes expiry
+      is_verified: false
     });
     await newUser.save();
-    const subject="Subtrack Email Verification Mail"
-    const body=`your otp is ${generatedOTP}`;
-    await sendMail(email,subject,body);
-    return res.status(201).json({ success: true, message: "User created successfully" });
+
+    const subject = "Subtrack Email Verification Mail";
+    const body = `Your OTP is ${generatedOTP}. It will expire in 10 minutes.`;
+    await sendMail(email, subject, body);
+
+    return res.status(201).json({
+      success: true,
+      message: "User created successfully. Please verify your OTP to complete registration."
+    });
   } catch (error) {
     console.error("Error creating user:", error);
     return res.status(500).json({
@@ -78,6 +92,47 @@ export const createUser = async (req: Request, res: Response) => {
     });
   }
 };
+
+export const verifySignupOtp = async (req: Request, res: Response) => {
+  const { email, otp } = req.body;
+
+  if (!email || !otp) {
+    return res.status(400).json({ success: false, message: "Email and OTP are required" });
+  }
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    if (user.otp !== otp) {
+      return res.status(400).json({ success: false, message: "Incorrect OTP" });
+    }
+
+    if (user.otp_expiry && new Date() > user.otp_expiry) {
+      return res.status(400).json({ success: false, message: "OTP has expired" });
+    }
+
+    user.is_verified = true;
+    user.otp = null;
+    user.otp_expiry = null;
+
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "OTP verified successfully. You can now sign in."
+    });
+  } catch (error) {
+    console.error("Error verifying OTP:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error"
+    });
+  }
+};
+
 
 export const updateUser = [
   uploadImageOnly.single("photo"),

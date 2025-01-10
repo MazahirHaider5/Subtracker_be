@@ -10,9 +10,9 @@ export interface IUser extends Document {
   password?: string;
   photo?: string;
   stripe_customer_id: string | null;
-  user_type: "individual" | "enterprise";
-  otp: string | null;
-  otp_expiry: Date | null;
+  user_type: string;
+  otp?: string | null;
+  otp_expiry?: Date | null;
   is_verified: boolean;
   reset_token?: string;
   reset_token_expiry?: Date;
@@ -36,7 +36,8 @@ const UserSchema: Schema = new Schema<IUser>({
   },
   password: {
     type: String,
-    default: ""
+    default: "",
+    required: true
   },
   photo: {
     type: String,
@@ -47,8 +48,7 @@ const UserSchema: Schema = new Schema<IUser>({
   },
   user_type: {
     type: String,
-    enum: ["individual", "enterprise"],
-    required: true
+    required: false
   },
   otp: {
     type: String,
