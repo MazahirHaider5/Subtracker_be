@@ -16,15 +16,17 @@ passport.use(
       callbackURL: "https://subtracker-be.onrender.com/auth/google/callback"
     },
     async (accessToken: string, refreshToken: string, profile: Profile, done: VerifyCallback) => {
-      console.log("Google Profile: ", profile); // Log profile data here
+      console.log("Access Token:", accessToken);
+      console.log("Refresh Token:", refreshToken);
+      console.log("Profile:", profile);
       try {
         let user = await User.findOne({ email: profile.emails?.[0].value });
         if (!user) {
           user = new User({
             googleId: profile.id,
             email: profile.emails?.[0].value,
-            name: profile.displayName,
-            photo: profile.photos?.[0].value,
+            name: profile.displayName || "Anonymous User",
+            photo: profile.photos?.[0].value || "",
             user_type: "individual",
             is_verified: true
           });
@@ -48,10 +50,17 @@ export const loginWithGoogle = passport.authenticate("google", {
 
 export const googleCallback = (req: Request, res: Response, next: any) => {
   passport.authenticate("google", { session: false }, (err, data, info) => {
-    if (err || !data) {
+    if (err) {
+      console.error("Google OAuth Error:", err);
+      return res.status(500).json({
+        success: false,
+        message: "Authentication failed due to an internal error.",
+      });
+    }
+    if (!data) {
       return res.status(401).json({
         success: false,
-        message: "Authentication failed..",
+        message: "Authentication failed. No user data returned.",
       });
     }
 

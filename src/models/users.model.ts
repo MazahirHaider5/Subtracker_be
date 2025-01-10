@@ -37,7 +37,6 @@ const UserSchema: Schema = new Schema<IUser>({
   password: {
     type: String,
     default: "",
-    required: true
   },
   photo: {
     type: String,
