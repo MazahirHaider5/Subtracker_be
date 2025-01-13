@@ -57,40 +57,35 @@ export const loginWithApple = passport.authenticate("apple", {
 
 // Apple callback route
 export const appleCallback = (req: Request, res: Response, next: any) => {
-  passport.authenticate("apple", {session: false}, (err: Error | null, data: any, info: any) => {
-    if (err) {
-      console.error("Apple Oauth error on appleCallback", err);
-      return res.status(500).json({
+  passport.authenticate("apple", { session: false }),
+  (req: Request, res: Response) => {
+    if (!req.user) {
+      return res.status(401).json({
         success: false,
-        message: "Apple Authentication failed due to internal server error"
+        message: "Authentication failed"
       });
     }
-    if (!data) {
-        return res.status(401).json({
-          success: false,
-          message: "Authentication failed, error occured while getting the user details"
-        });
-    }
-    const {user, accessToken, refreshToken} = data;
+
+    const { user, accessToken, refreshToken } = req.user as any;
 
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
-      maxAge: 24 * 60 * 60 * 1000,
+      maxAge: 24 * 60 * 60 * 1000
     });
+
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+      maxAge: 7 * 24 * 60 * 60 * 1000
     });
-    res.status(200).json({
+
+    return res.status(200).json({
       success: true,
       message: "Login successful",
-      user,
-      accessToken,
-      refreshToken
+      user
     });
-  })(req, res, next);
-};
+  }
+}

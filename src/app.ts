@@ -28,8 +28,7 @@ const allowedOrigins = [
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin) ||
-      origin === "https://subtracker-be.onrender.com/auth/apple/callback") {
+      if (!origin || allowedOrigins.some((allowed) => origin.startsWith(allowed))) {
         callback(null, true);
       } else {
         callback(new Error("Not allowed by CORS"));
