@@ -14,6 +14,7 @@ passport.use(
       callbackURL: process.env.APPLE_REDIRECT_URI as string,
       passReqToCallback: true, 
     },
+    
     async (
       req: Request,
       accessToken: string,
