@@ -24,8 +24,10 @@ passport.use(
       done: (error: any, user?: any) => void
     ) => {
       try {
-        const email = profile.email || idToken?.payload?.email;
+        const email = profile.email || idToken?.email || idToken?.payload?.email;
         const name = profile.name || "Apple user";
+
+        console.log("✅ ID Token:", idToken);
 
         console.info("Apple Login Profile:", profile);
         console.warn("Extracted Email:", email);
@@ -72,9 +74,19 @@ export const loginWithApple = passport.authenticate("apple", {
 
 // Apple callback route
 export const appleCallback = (req: Request, res: Response) => {
+  console.log("✅ Apple Callback Hit");
+  console.log("User:", req.user);
+
+  if (!req.user) {
+    return res.status(401).json({
+      success: false,
+      message: "Authentication failed. No user data returned.",
+    });
+  }
+
   res.status(200).json({
     success: true,
     message: "Login Successful",
-    user: req.user
+    user: req.user,
   });
 };
