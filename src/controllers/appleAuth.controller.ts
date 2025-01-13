@@ -10,11 +10,11 @@ passport.use(
       clientID: process.env.APPLE_CLIENT_ID as string,
       teamID: process.env.APPLE_TEAM_ID as string,
       keyID: process.env.APPLE_KEY_ID as string,
-      privateKeyString: process.env.APPLE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-      callbackURL: process.env.APPLE_REDIRECT_URI as string,
-      passReqToCallback: true, 
+      privateKeyString: process.env.APPLE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+      callbackURL: process.env.APPLE_REDIRECT_URI,
+      passReqToCallback: true
     },
-    
+
     async (
       req: Request,
       accessToken: string,
@@ -24,6 +24,10 @@ passport.use(
       done: (error: any, user?: any) => void
     ) => {
       try {
+        console.log("Client ID:", process.env.APPLE_CLIENT_ID);
+        console.log("Team ID:", process.env.APPLE_TEAM_ID);
+        console.log("Key ID:", process.env.APPLE_KEY_ID);
+        console.log("Callback URL:", process.env.APPLE_REDIRECT_URI);
         // Check if user already exists
         let user = await User.findOne({ email: profile.email });
 
@@ -32,7 +36,7 @@ passport.use(
           user = new User({
             email: profile.email,
             name: profile.name,
-            is_verified: true,
+            is_verified: true
           });
           await user.save();
         }
@@ -46,13 +50,15 @@ passport.use(
 );
 
 // Route to start Apple login
-export const loginWithApple = passport.authenticate("apple", {scope: ["email","name"]});
+export const loginWithApple = passport.authenticate("apple", {
+  scope: ["email", "name"]
+});
 
 // Apple callback route
 export const appleCallback = (req: Request, res: Response) => {
   res.status(200).json({
     success: true,
     message: "Login Successful",
-    user: req.user,
+    user: req.user
   });
 };
