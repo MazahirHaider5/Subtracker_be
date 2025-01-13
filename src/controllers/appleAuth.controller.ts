@@ -35,6 +35,7 @@ passport.use(
         let user = await User.findOne({ email });
 
         if (!user) {
+          console.log("creating new user....");
           user = new User({
             appleId: idToken?.sub,
             email,
@@ -42,6 +43,7 @@ passport.use(
             is_verified: true,
             user_type: "basic",
           });
+          console.log("User Data Before Save:", user);
           await user.save().then((savedUser) => {
             console.log("User successfully saved to database:", savedUser);
           }).catch((err) => {
