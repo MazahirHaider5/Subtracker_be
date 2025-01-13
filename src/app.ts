@@ -7,6 +7,8 @@ import cookieParser from "cookie-parser";
 import routes from "./routes";
 import { rateLimit } from "./middleware/rateLimiter";
 import passport from "passport";
+import session from "express-session";
+
 
 const PORT = process.env.PORT;
 
@@ -14,6 +16,18 @@ dotenv.config();
 const app = express();
 
 app.use(passport.initialize());
+
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || "mysecretkey",
+    resave: false,
+    saveUninitialized: false,
+    cookie: { secure: true } 
+  })
+);
+
+app.use(passport.initialize());
+app.use(passport.session()); 
 
 // Security headers
 app.use(helmet());

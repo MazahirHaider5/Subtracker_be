@@ -66,6 +66,19 @@ passport.use(
     }
   )
 );
+passport.serializeUser((user: any, done) => {
+  done(null, user.id);
+});
+
+// Deserialize user from session
+passport.deserializeUser(async (id, done) => {
+  try {
+    const user = await User.findById(id);
+    done(null, user);
+  } catch (error) {
+    done(error, null);
+  }
+});
 
 // Route to start Apple login
 export const loginWithApple = passport.authenticate("apple", {
@@ -75,7 +88,6 @@ export const loginWithApple = passport.authenticate("apple", {
 // Apple callback route
 export const appleCallback = (req: Request, res: Response) => {
   console.log("✅ Apple Callback Hit");
-  console.log("User:", req.user);
 
   if (!req.user) {
     return res.status(401).json({
@@ -90,3 +102,4 @@ export const appleCallback = (req: Request, res: Response) => {
     user: req.user,
   });
 };
+
