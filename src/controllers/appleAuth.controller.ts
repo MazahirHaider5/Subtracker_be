@@ -24,18 +24,16 @@ passport.use(
       done: (error: any, user?: any) => void
     ) => {
       try {
-        console.log("Client ID:", process.env.APPLE_CLIENT_ID);
-        console.log("Team ID:", process.env.APPLE_TEAM_ID);
-        console.log("Key ID:", process.env.APPLE_KEY_ID);
-        console.log("Callback URL:", process.env.APPLE_REDIRECT_URI);
+        const email = profile.email || idToken?.payload?.email;
+        const name = profile.name || "Apple user";
         // Check if user already exists
-        let user = await User.findOne({ email: profile.email });
+        let user = await User.findOne({ email });
 
         // If user does not exist, create a new user
         if (!user) {
           user = new User({
-            email: profile.email,
-            name: profile.name,
+            email,
+            name,
             is_verified: true
           });
           await user.save();

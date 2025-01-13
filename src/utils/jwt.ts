@@ -11,7 +11,6 @@ export const generateAccessToken = (user: IUser) => {
     }
   );
 };
-
 export const generateRefreshToken = (user: IUser) => {
   return jwt.sign(
     { id: user._id, email: user.email },
