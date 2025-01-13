@@ -36,14 +36,11 @@ passport.use(
 
         if (!user) {
           user = new User({
+            appleId: idToken?.sub,
             email,
             name,
             is_verified: true,
-            appleId: idToken?.sub,
-            stripe_customer_id: null,
             user_type: "basic",
-            language: "English",
-            currency: "US"
           });
           await user.save().then((savedUser) => {
             console.log("User successfully saved to database:", savedUser);
