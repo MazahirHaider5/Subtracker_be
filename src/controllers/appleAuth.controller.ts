@@ -23,20 +23,14 @@ passport.use(
       done: (error: any, user?: any) => void
     ) => {
       try {
-        const email = profile.email || idToken?.email || idToken?.payload?.email;
+        const email =
+          profile.email || idToken?.email || idToken?.payload?.email;
         const name = profile.name || "Apple user";
 
         console.log("✅ ID Token:", idToken);
-
         console.info("Apple Login Profile:", profile);
         console.warn("Extracted Email:", email);
         console.info("Extracted Name:", name);
-
-        process.stdout.write(
-          `stdout Apple Login Profile: ${JSON.stringify(profile)}\n`
-        );
-        process.stdout.write(`stdout Extracted Email: ${email}\n`);
-        process.stdout.write(`stdout Extracted Name: ${name}\n`);
 
         let user = await User.findOne({ email });
 
@@ -60,6 +54,7 @@ passport.use(
         }
         done(null, user);
       } catch (error) {
+        console.error("Error during Apple strategy authentication:", error);
         done(error, false);
       }
     }
@@ -87,6 +82,7 @@ export const loginWithApple = passport.authenticate("apple", {
 // Apple callback route
 export const appleCallback = (req: Request, res: Response) => {
   console.log("✅ Apple Callback Hit");
+  console.log("User from session:", req.user);
 
   if (!req.user) {
     return res.status(401).json({

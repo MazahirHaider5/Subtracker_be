@@ -22,7 +22,7 @@ app.use(
     secret: process.env.SESSION_SECRET || "mysecretkey",
     resave: false,
     saveUninitialized: false,
-    cookie: { secure: true } 
+    cookie: { secure: process.env.NODE_ENV === "production" } 
   })
 );
 
