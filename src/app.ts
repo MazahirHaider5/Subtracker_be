@@ -19,11 +19,9 @@ app.use(helmet());
 
 // CORS configuration
 const allowedOrigins = [
-  "https://sub-tracker-8ykfn9rgp-mazahir-haiders-projects.vercel.app",
-  "https://subtracker-be.onrender.com/"
-
+  "https://subtracker-be.onrender.com/",
+  "https://appleid.apple.com/"
 ];
-
 const PORT = process.env.PORT;
 
 
