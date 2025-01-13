@@ -14,7 +14,6 @@ passport.use(
       callbackURL: process.env.APPLE_REDIRECT_URI,
       passReqToCallback: true
     },
-
     async (
       req: Request,
       accessToken: string,
@@ -24,21 +23,41 @@ passport.use(
       done: (error: any, user?: any) => void
     ) => {
       try {
-        const email = profile.email || idToken?.payload?.email;
+        const email = profile.email || idToken?.email || idToken?.payload?.email;
         const name = profile.name || "Apple user";
-        // Check if user already exists
+
+        console.log("✅ ID Token:", idToken);
+
+        console.info("Apple Login Profile:", profile);
+        console.warn("Extracted Email:", email);
+        console.info("Extracted Name:", name);
+
+        process.stdout.write(
+          `stdout Apple Login Profile: ${JSON.stringify(profile)}\n`
+        );
+        process.stdout.write(`stdout Extracted Email: ${email}\n`);
+        process.stdout.write(`stdout Extracted Name: ${name}\n`);
+
         let user = await User.findOne({ email });
 
-        // If user does not exist, create a new user
         if (!user) {
+          console.log("creating new user....");
           user = new User({
+            appleId: idToken?.sub,
             email,
-            name,
-            is_verified: true
+            is_verified: true,
+            user_type: "basic"
           });
-          await user.save();
+          console.log("User Data Before Save:", user);
+          try {
+            const savedUser = await user.save();
+            console.log("User successfully saved to database:", savedUser);
+          } catch (err) {
+            console.log("Error saving user to database:", err);
+          }
+        } else {
+          console.log("User found in database:", user);
         }
-
         done(null, user);
       } catch (error) {
         done(error, false);
@@ -46,6 +65,19 @@ passport.use(
     }
   )
 );
+passport.serializeUser((user: any, done) => {
+  done(null, user.id);
+});
+
+// Deserialize user from session
+passport.deserializeUser(async (id, done) => {
+  try {
+    const user = await User.findById(id);
+    done(null, user);
+  } catch (error) {
+    done(error, null);
+  }
+});
 
 // Route to start Apple login
 export const loginWithApple = passport.authenticate("apple", {
@@ -54,9 +86,19 @@ export const loginWithApple = passport.authenticate("apple", {
 
 // Apple callback route
 export const appleCallback = (req: Request, res: Response) => {
+  console.log("✅ Apple Callback Hit");
+
+  if (!req.user) {
+    return res.status(401).json({
+      success: false,
+      message: "Authentication failed. No user data returned.",
+    });
+  }
+
   res.status(200).json({
     success: true,
     message: "Login Successful",
-    user: req.user
+    user: req.user,
   });
 };
+
