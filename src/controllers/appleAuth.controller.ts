@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import passport from "passport";
+import passport, { session } from "passport";
 import AppleStrategy from "passport-apple";
 import User from "../models/users.model";
 import { generateAccessToken, generateRefreshToken } from "../utils/jwt";
@@ -23,6 +23,11 @@ passport.use(
       profile: { email?: string; name?: string },
       done: (error: any, user?: any) => void
     ) => {
+      console.log("Apple Strategy Triggered");
+      console.log("Access Token:", accessToken);
+      console.log("Refresh Token:", refreshToken);
+      console.log("ID Token:", idToken);
+      console.log("Profile:", profile);
       try {
         const email = profile.email || idToken?.payload?.email;
         const name = profile.name || "Apple user";
@@ -57,7 +62,11 @@ export const loginWithApple = passport.authenticate("apple", {
 
 // Apple callback route
 export const appleCallback = (req: Request, res: Response, next: any) => {
-  passport.authenticate("apple", { session: false }, (err: Error | null, user: any, info: any) => {
+  console.log("Apple Callback triggered");
+
+  passport.authenticate("apple", { session: true }, (err: Error | null, user: any, info: any) => {
+    console.log("session in appleCallback :", session);
+    
     if (err || !user) {
       console.log("Error or no user: ", err, info);
       return res.status(401).json({
@@ -67,6 +76,10 @@ export const appleCallback = (req: Request, res: Response, next: any) => {
     }
 
     const { accessToken, refreshToken } = user;
+    console.log("User authenticated, tokens generated:");
+    console.log("Access Token:", accessToken);
+    console.log("Refresh Token:", refreshToken);
+
     console.log("User authenticated, tokens generated:", accessToken, refreshToken);
 
     res.cookie("accessToken", accessToken, {

@@ -32,7 +32,7 @@ const UserSchema: Schema = new Schema<IUser>({
   },
   name: {
     type: String,
-    required: true
+    required: false
   },
   phone: {
     type: String,

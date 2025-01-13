@@ -49,7 +49,7 @@ export const getUsers = async (req: Request, res: Response) => {
 // Create a new user
 export const createUser = async (req: Request, res: Response) => {
   const { email, password } = req.body;
-  console.log("dataaaa", req.body);
+
   if (!email || !password) {
     return res
       .status(400)
@@ -75,7 +75,7 @@ export const createUser = async (req: Request, res: Response) => {
     // Create a new user with is_verified set to false
     const newUser = new User({
       email,
-      name: "",
+      name: req.body.name || "Subtracker User",
       password: hashedPassword,
       user_type: "",
       otp: generatedOTP,
