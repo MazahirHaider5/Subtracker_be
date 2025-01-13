@@ -59,6 +59,7 @@ export const loginWithApple = passport.authenticate("apple", {
 export const appleCallback = (req: Request, res: Response, next: any) => {
   passport.authenticate("apple", { session: false }, (err: Error | null, user: any, info: any) => {
     if (err || !user) {
+      console.log("Error or no user: ", err, info);
       return res.status(401).json({
         success: false,
         message: "Authentication failed",
@@ -66,6 +67,7 @@ export const appleCallback = (req: Request, res: Response, next: any) => {
     }
 
     const { accessToken, refreshToken } = user;
+    console.log("User authenticated, tokens generated:", accessToken, refreshToken);
 
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
@@ -88,3 +90,4 @@ export const appleCallback = (req: Request, res: Response, next: any) => {
     });
   })(req, res, next);
 };
+

@@ -21,7 +21,8 @@ app.use(helmet());
 // CORS configuration
 const allowedOrigins = [
   "https://subtracker-be.onrender.com",
-  "https://appleid.apple.com"
+  "https://appleid.apple.com",
+  "http://localhost:3000"
 ];
 
 

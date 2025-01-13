@@ -48,9 +48,9 @@ export const getUsers = async (req: Request, res: Response) => {
 
 // Create a new user
 export const createUser = async (req: Request, res: Response) => {
-  const { email, name, password } = req.body;
+  const { email, password } = req.body;
   console.log("dataaaa", req.body);
-  if (!email || !name || !password) {
+  if (!email || !password) {
     return res
       .status(400)
       .json({ success: false, message: "Missing required fields" });
@@ -75,7 +75,7 @@ export const createUser = async (req: Request, res: Response) => {
     // Create a new user with is_verified set to false
     const newUser = new User({
       email,
-      name,
+      name: "",
       password: hashedPassword,
       user_type: "",
       otp: generatedOTP,
