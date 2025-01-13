@@ -8,6 +8,7 @@ import routes from "./routes";
 import { rateLimit } from "./middleware/rateLimiter";
 import passport from "passport";
 
+const PORT = process.env.PORT;
 
 dotenv.config();
 const app = express();
@@ -19,16 +20,16 @@ app.use(helmet());
 
 // CORS configuration
 const allowedOrigins = [
-  "https://subtracker-be.onrender.com/",
-  "https://appleid.apple.com/"
+  "https://subtracker-be.onrender.com",
+  "https://appleid.apple.com"
 ];
-const PORT = process.env.PORT;
 
 
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
+      if (!origin || allowedOrigins.includes(origin) ||
+      origin === "https://subtracker-be.onrender.com/auth/apple/callback") {
         callback(null, true);
       } else {
         callback(new Error("Not allowed by CORS"));
