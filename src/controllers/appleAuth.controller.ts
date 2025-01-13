@@ -26,18 +26,34 @@ passport.use(
       try {
         const email = profile.email || idToken?.payload?.email;
         const name = profile.name || "Apple user";
-        // Check if user already exists
+
+        console.log("Apple Login Profile:", profile);
+        console.log("Extracted Email:", email);
+        console.log("Extracted Name:", name);
+
+
         let user = await User.findOne({ email });
 
-        // If user does not exist, create a new user
         if (!user) {
           user = new User({
             email,
             name,
-            is_verified: true
+            is_verified: true,
+            appleId: idToken?.sub,
+            stripe_customer_id: null,
+            user_type: "basic",
+            language: "English",
+            currency: "US"
           });
-          await user.save();
+          await user.save().then((savedUser) => {
+            console.log("User successfully saved to database:", savedUser);
+          }).catch((err) => {
+            console.log("Error saving user to database:", err);
+          });
+        } else {
+          console.log("User found in database:", user);
         }
+        
 
         done(null, user);
       } catch (error) {
