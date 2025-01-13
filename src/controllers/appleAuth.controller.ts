@@ -27,8 +27,8 @@ passport.use(
         const email = profile.email || idToken?.payload?.email;
         const name = profile.name || "Apple user";
 
-        console.log("Apple Login Profile:", profile);
-        console.log("Extracted Email:", email);
+        console.error("Apple Login Profile:", profile);
+        console.error("Extracted Email:", email);
         console.log("Extracted Name:", name);
 
 
@@ -44,16 +44,15 @@ passport.use(
             user_type: "basic",
           });
           console.log("User Data Before Save:", user);
-          await user.save().then((savedUser) => {
+          try {
+            const savedUser = await user.save();
             console.log("User successfully saved to database:", savedUser);
-          }).catch((err) => {
+          } catch (err) {
             console.log("Error saving user to database:", err);
-          });
+          }
         } else {
           console.log("User found in database:", user);
         }
-        
-
         done(null, user);
       } catch (error) {
         done(error, false);
