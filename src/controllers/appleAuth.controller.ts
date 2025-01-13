@@ -27,10 +27,15 @@ passport.use(
         const email = profile.email || idToken?.payload?.email;
         const name = profile.name || "Apple user";
 
-        console.error("Apple Login Profile:", profile);
-        console.error("Extracted Email:", email);
-        console.log("Extracted Name:", name);
+        console.info("Apple Login Profile:", profile);
+        console.warn("Extracted Email:", email);
+        console.info("Extracted Name:", name);
 
+        process.stdout.write(
+          `stdout Apple Login Profile: ${JSON.stringify(profile)}\n`
+        );
+        process.stdout.write(`stdout Extracted Email: ${email}\n`);
+        process.stdout.write(`stdout Extracted Name: ${name}\n`);
 
         let user = await User.findOne({ email });
 
@@ -40,7 +45,7 @@ passport.use(
             appleId: idToken?.sub,
             email,
             is_verified: true,
-            user_type: "basic",
+            user_type: "basic"
           });
           console.log("User Data Before Save:", user);
           try {
