@@ -4,6 +4,7 @@ import mongoose, { Schema, Document } from "mongoose";
 export interface IUser extends Document {
   _id: string;
   googleId?: string;
+  appleId? : string;
   email: string;
   name: string;
   phone?: string;
@@ -23,6 +24,7 @@ export interface IUser extends Document {
 // Mongoose schema
 const UserSchema: Schema = new Schema<IUser>({
   googleId: { type: String, unique: true, sparse: true },
+  appleId: { type: String, unique: true, sparse: true },
   email: {
     type: String,
     required: true,
