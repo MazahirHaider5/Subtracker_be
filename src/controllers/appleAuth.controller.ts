@@ -39,7 +39,6 @@ passport.use(
           user = new User({
             appleId: idToken?.sub,
             email,
-            name,
             is_verified: true,
             user_type: "basic",
           });
