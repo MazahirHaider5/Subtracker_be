@@ -57,35 +57,34 @@ export const loginWithApple = passport.authenticate("apple", {
 
 // Apple callback route
 export const appleCallback = (req: Request, res: Response, next: any) => {
-  passport.authenticate("apple", { session: false }),
-  (req: Request, res: Response) => {
-    if (!req.user) {
+  passport.authenticate("apple", { session: false }, (err: Error | null, user: any, info: any) => {
+    if (err || !user) {
       return res.status(401).json({
         success: false,
-        message: "Authentication failed"
+        message: "Authentication failed",
       });
     }
 
-    const { user, accessToken, refreshToken } = req.user as any;
+    const { accessToken, refreshToken } = user;
 
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
-      maxAge: 24 * 60 * 60 * 1000
+      maxAge: 24 * 60 * 60 * 1000,
     });
 
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
-      maxAge: 7 * 24 * 60 * 60 * 1000
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
     return res.status(200).json({
       success: true,
       message: "Login successful",
-      user
+      user,
     });
-  }
-}
+  })(req, res, next);
+};
