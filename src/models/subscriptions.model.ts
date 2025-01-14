@@ -4,7 +4,7 @@ export interface ISubscriptions extends Document {
     _id: string;
     user: Types.ObjectId;
     subscription_name: string;
-    subscription_ctg: Types.ObjectId;
+    subscription_ctg: string;
     subscription_desc: string;
     subscription_start: Date;
     subscription_end: Date;
@@ -26,8 +26,7 @@ const SubscriptionSchema: Schema= new Schema<ISubscriptions>({
         required: true
     },
     subscription_ctg: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Category",
+        type: String,
         required: true
     },
     subscription_desc: {

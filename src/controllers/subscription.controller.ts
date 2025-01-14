@@ -53,6 +53,8 @@ export const createSubscription = [
         photo,
         pdf
       });
+      console.log("Newww subscription", newSubscription);
+      
       await newSubscription.save();
       res.status(200).json({
         success: true,
@@ -95,3 +97,40 @@ export const getUserSubscription = async (req: Request, res: Response) => {
         });
     }
 };
+
+export const deleteSubscription = [
+  async (req: Request, res: Response) => {
+    try {
+      const token = req.cookies.accessToken;
+      if (!token) {
+        return res.status(401).json({
+          success: false,
+          message: "Unauthorized, no token provided"
+        });
+      }
+      const decodedToken = jwt.verify(token, process.env.JWT_SECRET!) as {
+        id: string;
+        email: string;
+      };
+      const userId = decodedToken.id;
+      const subscriptionId = req.params.id;
+      const subscription = Subscription.findOne({_id: subscriptionId, user: userId});
+      if (!subscription) {
+        return res.status(404).json({
+          success: false,
+          message: "Subscription not found"
+        });
+      }
+      await Subscription.findByIdAndDelete(subscriptionId);
+      res.status(200).json({
+        success: true,
+        message: "Subscription deleted successfully"
+      });
+    } catch (error) {
+      return res.status(500).json({
+        success: false,
+        message: "Internal server error"
+      });
+    }
+  }
+]
