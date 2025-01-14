@@ -11,6 +11,7 @@ export interface ISubscriptions extends Document {
     subscription_billing_cycle: "Monthly" | "Yearly" | "Weekly" | "Daily"; //assuming these will be options from frontend dropdowns
     subscription_price: number;
     subscription_reminder: string;
+    is_paid: boolean;
     photo: string | null;
     pdf: string[] | null;
 }
@@ -53,6 +54,10 @@ const SubscriptionSchema: Schema= new Schema<ISubscriptions>({
     subscription_reminder: {
         type: String,
         required: true
+    },
+    is_paid: {
+        type: Boolean,
+        default: false
     },
     photo: {
         type: String,
