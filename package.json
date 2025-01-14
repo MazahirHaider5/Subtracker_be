@@ -4,7 +4,7 @@
   "description": "Backend for AVD",
   "main": "/dist/app.js",
   "scripts": {
-    "start": "tsc && node dist/app.js",
+    "start": "node dist/app.js",
     "build": "tsc",
     "serve": "node dist/app.js",
     "dev": "nodemon --watch src --exec ts-node src/app.ts",

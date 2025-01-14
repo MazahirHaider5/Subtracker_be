@@ -3,8 +3,7 @@
   "builds": [
     {
       "src": "src/app.ts",
-      "use": "@vercel/node",
-      "buildCommand": "tsc"
+      "use": "@vercel/node"
     }
   ],
   "routes": [
