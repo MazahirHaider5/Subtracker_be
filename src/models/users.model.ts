@@ -19,6 +19,9 @@ export interface IUser extends Document {
   reset_token_expiry?: Date;
   language: string;
   currency: string;
+  is_biomatric: boolean;
+  is_two_factor: boolean;
+  is_email_notification: boolean; 
 }
 
 // Mongoose schema
@@ -72,7 +75,19 @@ const UserSchema: Schema = new Schema<IUser>({
   currency: {
     type: String,
     default: "US"
-  }
+  },
+  is_biomatric: {
+    type: Boolean,
+    default: false
+  },
+  is_two_factor: {
+    type: Boolean,
+    default: false
+  },
+  is_email_notification: {
+    type: Boolean,
+    default: false
+  },
 });
 
 export default mongoose.model<IUser>("User", UserSchema);

@@ -5,6 +5,7 @@ import { generateAccessToken, generateRefreshToken } from "../utils/jwt";
 import { sendMail } from "../utils/sendMail";
 import { uploadImageOnly } from "../config/multer";
 import jwt from "jsonwebtoken";
+
 // Helper function to get user by ID or email
 const findUser = async (id: string | undefined, email?: string) => {
   let user;
@@ -79,13 +80,13 @@ export const createUser = async (req: Request, res: Response) => {
       password: hashedPassword,
       user_type: "",
       otp: generatedOTP,
-      otp_expiry: new Date(Date.now() + 10 * 60 * 1000), // 10 minutes expiry
+      otp_expiry: new Date(Date.now() + 90 * 1000), // 90 seconds expiry
       is_verified: false
     });
     await newUser.save();
 
     const subject = "Subtrack Email Verification Mail";
-    const body = `Your OTP is ${generatedOTP}. It will expire in 10 minutes.`;
+    const body = `Your OTP is ${generatedOTP}. It will expire in 90 seconds.`;
     await sendMail(email, subject, body);
 
     return res.status(201).json({
@@ -99,6 +100,46 @@ export const createUser = async (req: Request, res: Response) => {
       success: false,
       message: "Error occurred while creating the user",
       error: (error as Error).message
+    });
+  }
+};
+
+export const deleteAccount = async (req: Request, res: Response) => {
+  try {
+    const token =
+      req.cookies.accessToken || req.headers.authorization?.split(" ")[1];
+
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized, no token provided",
+      });
+    }
+
+    const decodedToken = jwt.verify(token, process.env.JWT_SECRET!) as {
+      id: string;
+    };
+
+    const userId = decodedToken.id;
+    const user = await User.findByIdAndDelete(userId);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "User deleted successfully",
+    });
+  } catch (error) {
+    console.error("Error deleting user:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error while deleting the account",
+      error: (error as Error).message,
     });
   }
 };

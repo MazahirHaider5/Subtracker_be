@@ -86,12 +86,12 @@ export const requestOtp = async (req: Request, res: Response) => {
     const otp = generateOtp();
 
     user.otp = otp;
-    user.otp_expiry = new Date(Date.now() + 10 * 60 * 1000); // token will be expired in 10 minutes
+    user.otp_expiry =new Date(Date.now() + 90 * 1000), // 90 seconds expiry
 
     await user.save();
 
     const subject = "Password Reset OTP";
-    const body = `Your OTP for password reset is: ${otp}. It will expire in 10 minutes.`;
+    const body = `Your OTP for password reset is: ${otp}. It will expire in 90 seconds.`;
     await sendMail(email, subject, body);
 
     return res
@@ -127,13 +127,13 @@ export const resendOtp = async (req: Request, res: Response) => {
     }
     const otp = generateOtp();
     user.otp = otp;
-    user.otp_expiry = new Date(Date.now() + 10 * 60 * 1000);
+    user.otp_expiry = new Date(Date.now() + 90 * 1000), // 90 seconds expiry
     user.is_verified = false;
 
     await user.save();
 
     const subject = "Password Reset OTP";
-    const body = `Your new OTP for password reset is: ${otp}. It will expire in 10 minutes.`;
+    const body = `Your new OTP for password reset is: ${otp}. It will expire in 90 seconds.`;
     await sendMail(email, subject, body);
 
     return res
