@@ -57,7 +57,8 @@ export const login = async (req: Request, res: Response) => {
 
     return res.status(200).json({
       success: true,
-      message: "Login successful"
+      message: "Login successful",
+      user
     });
   } catch (error) {
     console.error("Error during login:", error);
@@ -224,3 +225,4 @@ export const resetPassword = async (req: Request, res: Response) => {
       .json({ success: false, message: "Internal server error" });
   }
 };
+

@@ -12,7 +12,7 @@ export interface ISubscriptions extends Document {
     subscription_price: number;
     subscription_reminder: string;
     photo: string | null;
-    pdf: string | null;
+    pdf: string[] | null;
 }
 
 const SubscriptionSchema: Schema= new Schema<ISubscriptions>({
@@ -59,7 +59,7 @@ const SubscriptionSchema: Schema= new Schema<ISubscriptions>({
         required: false
     },
     pdf: {
-        type: String,
+        type: [String],
         required: false
     }
 });
