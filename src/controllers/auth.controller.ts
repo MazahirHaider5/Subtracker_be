@@ -19,7 +19,7 @@ export const login = async (req: Request, res: Response) => {
   try {
     // Use Mongoose to find the user by email
     const user = await User.findOne({ email }).select(
-      "id name email password role domain port secret"
+      "id name email password role domain port secret otp otp_expiry is_verified language currency is_biomatric is_two_factor is_email_notification stripe_customer_id"
     );
 
     if (!user) {
@@ -37,7 +37,9 @@ export const login = async (req: Request, res: Response) => {
     }
 
     // Cast the Mongoose user object to match the User type expected by JWT functions
-    const userPayload: IUser = user.toObject(); // Convert to plain object
+    const userPayload: IUser = user.toObject();
+    delete userPayload.password;  // Remove password field
+
     const accessToken = generateAccessToken(userPayload);
     const refreshToken = generateRefreshToken(userPayload);
 
@@ -58,7 +60,7 @@ export const login = async (req: Request, res: Response) => {
     return res.status(200).json({
       success: true,
       message: "Login successful",
-      user
+      user: userPayload
     });
   } catch (error) {
     console.error("Error during login:", error);
@@ -87,9 +89,8 @@ export const requestOtp = async (req: Request, res: Response) => {
     const otp = generateOtp();
 
     user.otp = otp;
-    user.otp_expiry =new Date(Date.now() + 90 * 1000), // 90 seconds expiry
-
-    await user.save();
+    (user.otp_expiry = new Date(Date.now() + 90 * 1000)), // 90 seconds expiry
+      await user.save();
 
     const subject = "Password Reset OTP";
     const body = `Your OTP for password reset is: ${otp}. It will expire in 90 seconds.`;
@@ -128,8 +129,8 @@ export const resendOtp = async (req: Request, res: Response) => {
     }
     const otp = generateOtp();
     user.otp = otp;
-    user.otp_expiry = new Date(Date.now() + 90 * 1000), // 90 seconds expiry
-    user.is_verified = false;
+    (user.otp_expiry = new Date(Date.now() + 90 * 1000)), // 90 seconds expiry
+      (user.is_verified = false);
 
     await user.save();
 
@@ -226,3 +227,28 @@ export const resetPassword = async (req: Request, res: Response) => {
   }
 };
 
+export const logout = async (req: Request, res: Response) => {
+  try {
+    res.clearCookie("accessToken", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict"
+    });
+    res.clearCookie("refreshToken", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict"
+    });
+    return res.status(200).json({
+      success: true,
+      message: "Logout successful"
+    });
+  } catch (error) {
+    console.error("Error during logout:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error during logout",
+      error: (error as Error).message
+    });
+  }
+};

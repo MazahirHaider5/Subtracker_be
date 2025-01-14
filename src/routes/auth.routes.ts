@@ -1,6 +1,7 @@
 import express from "express";
 import {
     login,
+    logout,
     requestOtp,
     resendOtp,
     resetPassword,
@@ -21,6 +22,7 @@ router.post("/signUp", createUser);
 router.post("/verifyOtp", verifySignupOtp);
 
 router.post("/login", login);
+router.post("/logout", logout);
 
 router.post("/requestOtp", requestOtp);
 router.post("/resendOtp", resendOtp);
