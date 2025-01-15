@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
 import Subscription from "../models/subscriptions.model";
 import { upload, uploadImageOnly } from "../config/multer";
-import path from "path";
 import jwt from "jsonwebtoken";
 
 export const createSubscription = [

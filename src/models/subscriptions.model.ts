@@ -8,7 +8,7 @@ export interface ISubscriptions extends Document {
     subscription_desc: string;
     subscription_start: Date;
     subscription_end: Date;
-    subscription_billing_cycle: "Monthly" | "Yearly" | "Weekly" | "Daily"; //assuming these will be options from frontend dropdowns
+    subscription_billing_cycle: "Monthly" | "Yearly" | "Weekly" | "Daily"; 
     subscription_price: number;
     subscription_reminder: string;
     is_paid: boolean;
