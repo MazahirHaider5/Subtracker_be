@@ -38,7 +38,7 @@ export const login = async (req: Request, res: Response) => {
 
     // Cast the Mongoose user object to match the User type expected by JWT functions
     const userPayload: IUser = user.toObject();
-    delete userPayload.password;  // Remove password field
+    delete userPayload.password; 
 
     const accessToken = generateAccessToken(userPayload);
     const refreshToken = generateRefreshToken(userPayload);
@@ -60,7 +60,9 @@ export const login = async (req: Request, res: Response) => {
     return res.status(200).json({
       success: true,
       message: "Login successful",
-      user: userPayload
+      user: userPayload,
+      accessToken : accessToken,
+      refreshToken: refreshToken
     });
   } catch (error) {
     console.error("Error during login:", error);
@@ -232,12 +234,12 @@ export const logout = async (req: Request, res: Response) => {
     res.clearCookie("accessToken", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "strict"
+      sameSite: "none"
     });
     res.clearCookie("refreshToken", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "strict"
+      sameSite: "none"
     });
     return res.status(200).json({
       success: true,
