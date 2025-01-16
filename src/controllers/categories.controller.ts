@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken";
 
 export const createCategory = async (req: Request, res: Response) => {
     try {
-        const token = req.cookies.accessToken;
+        const token = req.cookies.accessToken || (req.headers.authorization && req.headers.authorization.split(" ")[1]);
         if(!token) {
             return res.status(401).json({
                 success: false,
@@ -35,7 +35,7 @@ export const createCategory = async (req: Request, res: Response) => {
         });
     } catch (error) {
         res.status(500).json({
-            success: true,
+            success: false,
             message: "Error occured while creating Category",
         });
     }
@@ -71,7 +71,7 @@ export const getCategories = async (req: Request, res: Response) => {
 
 export const deleteCategory = async (req: Request, res: Response) => {
     try {
-        const token = req.cookies.accessToken;
+        const token = req.cookies.accessToken || (req.headers.authorization && req.headers.authorization.split(" ")[1]);
         if (!token) {
             return res.status(401).json({
                 success: false,
@@ -107,7 +107,7 @@ export const deleteCategory = async (req: Request, res: Response) => {
 
 export const updateCategory = async (req: Request, res: Response) => {
     try {
-        const token = req.cookies.accessToken;
+        const token = req.cookies.accessToken || (req.headers.authorization && req.headers.authorization.split(" ")[1]);
         if (!token) {
             return res.status(401).json({
                 success: false,
