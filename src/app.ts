@@ -8,6 +8,8 @@ import routes from "./routes";
 import { rateLimit } from "./middleware/rateLimiter";
 import passport from "passport";
 import session from "express-session";
+import path from "path";
+
 
 
 const PORT = process.env.PORT;
@@ -61,6 +63,9 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 app.use(rateLimit);
+
+app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
+
 app.get("/test", (req, res)=> {
   res.status(200).json({message: "server working"})
 })
