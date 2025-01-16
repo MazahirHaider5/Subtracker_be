@@ -36,22 +36,24 @@ app.use(helmet());
 const allowedOrigins = [
   "https://subtracker-be.onrender.com",
   "https://appleid.apple.com",
-  "http://localhost:3000"
+  "http://localhost:3000",
+  "http://localhost:3001",
+  "http://localhost:4000"
 ];
 
 
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin || allowedOrigins.some((allowed) => origin.startsWith(allowed))) {
+      if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
         callback(new Error("Not allowed by CORS"));
       }
     },
-    credentials: true,
+    credentials: true, // Allow credentials (cookies)
     methods: "GET,POST,PUT,DELETE,OPTIONS,PATCH",
-    allowedHeaders: "Content-Type,Authorization",
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
