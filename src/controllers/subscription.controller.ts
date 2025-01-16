@@ -10,7 +10,7 @@ export const createSubscription = [
   ]),
   async (req: Request, res: Response) => {
     try {
-      const token = req.cookies.accessToken;
+      const token = req.cookies.accessToken || (req.headers.authorization && req.headers.authorization.split(" ")[1]);
       if (!token) {
         res.status(401).json({
           success: false,
@@ -71,7 +71,7 @@ export const createSubscription = [
 
 export const getUserSubscription = async (req: Request, res: Response) => {
   try {
-    const token = req.cookies.accessToken;
+    const token = req.cookies.accessToken || (req.headers.authorization && req.headers.authorization.split(" ")[1]);
     if (!token) {
       return res.status(401).json({
         success: false,
@@ -100,7 +100,7 @@ export const getUserSubscription = async (req: Request, res: Response) => {
 export const deleteSubscription = [
   async (req: Request, res: Response) => {
     try {
-      const token = req.cookies.accessToken;
+      const token = req.cookies.accessToken || (req.headers.authorization && req.headers.authorization.split(" ")[1]);
       if (!token) {
         return res.status(401).json({
           success: false,
@@ -141,7 +141,7 @@ export const updateSubscription = [
   ]),
   async (req: Request, res: Response) => {
     try {
-      const token = req.cookies.accessToken;
+      const token = req.cookies.accessToken || (req.headers.authorization && req.headers.authorization.split(" ")[1]);
       if (!token) {
         return res.status(401).json({
           success: false,

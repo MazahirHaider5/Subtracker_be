@@ -50,7 +50,8 @@ export const getDashboardData = async (req: Request, res: Response) => {
         return daysRemaining <=7 && daysRemaining>0;
     }).map((sub) => ({
         subscription_name: sub.subscription_name,
-        subscription_price: sub.subscription_price
+        subscription_price: sub.subscription_price,
+        subscription_end: sub.subscription_end
     }))
 
     res.status(200).json({
