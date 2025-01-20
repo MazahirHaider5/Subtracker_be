@@ -69,7 +69,7 @@ export const getCategories = async (req: Request, res: Response) => {
       email: string;
     };
     const userId = decodedToken.id;
-    const categories = await Category.find({ user: userId });
+    const categories = await Category.find({ user: userId }).populate("subscriptions").exec();
     res.status(200).json({
       success: true,
       message: "Categories fetched successfully",

@@ -5,7 +5,9 @@ import jwt from "jsonwebtoken";
 
 export const getDashboardData = async (req: Request, res: Response) => {
   try {
-    const token = req.cookies.accessToken;
+    const token =
+      req.cookies.accessToken ||
+      (req.headers.authorization && req.headers.authorization.split(" ")[1]);
     if (!token) {
       return res.status(401).json({
         success: false,

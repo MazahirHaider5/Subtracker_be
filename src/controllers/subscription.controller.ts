@@ -1,7 +1,9 @@
 import { Request, Response } from "express";
 import Subscription from "../models/subscriptions.model";
-import { upload, uploadImageOnly } from "../config/multer";
+import Category from "../models/categories.model";
+import { upload } from "../config/multer";
 import jwt from "jsonwebtoken";
+import { Types } from "mongoose";
 
 export const createSubscription = [
   upload.fields([
@@ -34,6 +36,14 @@ export const createSubscription = [
         subscription_reminder
       } = req.body;
 
+      const category = await Category.findById(subscription_ctg);
+      if (!category) {
+        return res.status(404).json({
+          success: false,
+          message: "Category not found"
+        });
+      }
+
       const files = req.files as { [fieldname: string]: Express.Multer.File[] };
 
       const photo = files?.photo?.[0]?.path || null;
@@ -42,7 +52,7 @@ export const createSubscription = [
       const newSubscription = new Subscription({
         user: userId,
         subscription_name,
-        subscription_ctg,
+        subscription_ctg: new Types.ObjectId(category._id),
         subscription_desc,
         subscription_start,
         subscription_end,
@@ -52,9 +62,13 @@ export const createSubscription = [
         photo,
         pdf: pdf
       });
-      console.log("Newww subscription", newSubscription);
 
-      await newSubscription.save();
+      const savedSubscription = await newSubscription.save();
+
+      category.subscriptions.push(savedSubscription._id as Types.ObjectId);
+
+      await category.save();
+      
       res.status(200).json({
         success: true,
         message: "Subscription created successfully",

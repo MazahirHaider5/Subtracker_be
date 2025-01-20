@@ -106,12 +106,14 @@ export const createUser = async (req: Request, res: Response) => {
 
 export const deleteAccount = async (req: Request, res: Response) => {
   try {
-    const token = req.cookies.accessToken || (req.headers.authorization && req.headers.authorization.split(" ")[1]);
+    const token =
+      req.cookies.accessToken ||
+      (req.headers.authorization && req.headers.authorization.split(" ")[1]);
 
     if (!token) {
       return res.status(401).json({
         success: false,
-        message: "Unauthorized, no token provided",
+        message: "Unauthorized, no token provided"
       });
     }
 
@@ -125,20 +127,20 @@ export const deleteAccount = async (req: Request, res: Response) => {
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: "User not found",
+        message: "User not found"
       });
     }
 
     return res.status(200).json({
       success: true,
-      message: "Account deleted successfully",
+      message: "Account deleted successfully"
     });
   } catch (error) {
     console.error("Error deleting user:", error);
     return res.status(500).json({
       success: false,
       message: "Internal server error while deleting the account",
-      error: (error as Error).message,
+      error: (error as Error).message
     });
   }
 };
@@ -193,7 +195,9 @@ export const updateUser = [
   uploadImageOnly.single("photo"),
   async (req: Request, res: Response) => {
     try {
-      const token = req.cookies.accessToken || (req.headers.authorization && req.headers.authorization.split(" ")[1]);
+      const token =
+        req.cookies.accessToken ||
+        (req.headers.authorization && req.headers.authorization.split(" ")[1]);
 
       if (!token) {
         return res.status(401).json({
@@ -239,7 +243,9 @@ export const updateUser = [
 
 export const changeLanguage = async (req: Request, res: Response) => {
   try {
-    const token = req.cookies.accessToken || (req.headers.authorization && req.headers.authorization.split(" ")[1]);
+    const token =
+      req.cookies.accessToken ||
+      (req.headers.authorization && req.headers.authorization.split(" ")[1]);
     if (!token) {
       return res.status(401).json({
         success: false,
@@ -277,14 +283,16 @@ export const changeLanguage = async (req: Request, res: Response) => {
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: "Error updating language",
+      message: "Error updating language"
     });
   }
 };
 
 export const changeCurrency = async (req: Request, res: Response) => {
   try {
-    const token = req.cookies.accessToken || (req.headers.authorization && req.headers.authorization.split(" ")[1]);
+    const token =
+      req.cookies.accessToken ||
+      (req.headers.authorization && req.headers.authorization.split(" ")[1]);
     if (!token) {
       return res.status(401).json({
         success: false,
@@ -322,7 +330,76 @@ export const changeCurrency = async (req: Request, res: Response) => {
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: "Error updating currency",
+      message: "Error updating currency"
+    });
+  }
+};
+
+// for updating is_biomatric, is_two_factor , is_email_notification, currency, language,
+// using a single controller when user can update a single or multiple fields using params
+export const updateSpecificFields = async (req: Request, res: Response) => {
+  try {
+    const token =
+      req.cookies.accessToken ||
+      (req.headers.authorization && req.headers.authorization.split(" ")[1]);
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized, token not provided"
+      });
+    }
+    const decodedToken = jwt.verify(token, process.env.JWT_SECRET!) as {
+      id: string;
+    };
+    const userId = decodedToken.id;
+
+    const {
+      language,
+      currency,
+      is_biomatric,
+      is_two_factor,
+      is_email_notification
+    } = req.body;
+    const updateFields: {
+      [key: string]: any;
+    } = {};
+
+    if (language) updateFields.language = language;
+    if (currency) updateFields.currency = currency;
+    if (typeof is_biomatric == "boolean")
+      updateFields.is_biomatric = is_biomatric;
+    if (typeof is_two_factor == "boolean")
+      updateFields.is_two_factor = is_two_factor;
+    if (typeof is_email_notification == "boolean")
+      updateFields.is_email_notification = is_email_notification;
+
+    if (Object.keys(updateFields).length == 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No valid fields provided to update"
+      });
+    }
+    const updatedUser = await User.findByIdAndUpdate(userId, updateFields, {
+      new: true
+    });
+
+    if (!updatedUser) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "User updated successfully",
+      user: updatedUser
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: "Error updating user fields"
     });
   }
 };
