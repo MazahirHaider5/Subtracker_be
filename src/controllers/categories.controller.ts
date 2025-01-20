@@ -31,14 +31,15 @@ export const createCategory = async (req: Request, res: Response) => {
     if (existingCategory) {
       return res.status(400).json({
         success: false,
-        message: "Category already exists"
+        message: "Category already available with this name, use a different name"
       });
     }
     const newCategory = new Category({
       user: userId,
       category_name,
       category_desc: category_desc || "",
-      category_budget
+      category_budget,
+      monthly_data: {}
     });
     await newCategory.save();
     res.status(201).json({
@@ -74,12 +75,7 @@ export const getCategories = async (req: Request, res: Response) => {
     const categories = await Category.find({ user: userId })
       .populate("subscriptions")
       .exec();
-      categories.forEach(category => {
-        console.log(`Category: ${category.category_name}`);
-        category.subscriptions.forEach(sub => {
-          console.log(`Subscription: ${sub.subscription_name}, Paid: ${sub.is_paid}`);
-        });
-      });
+      
       const updatedCategories = categories.map(category => {
         const activeSubscriptions = category.subscriptions.filter(
           (sub) => sub.is_paid === true

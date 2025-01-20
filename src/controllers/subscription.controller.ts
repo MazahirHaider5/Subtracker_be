@@ -6,25 +6,26 @@ import jwt from "jsonwebtoken";
 import { Types } from "mongoose";
 
 export const createSubscription = [
-  upload.fields([
+  upload.fields([ 
     { name: "photo", maxCount: 1 },
     { name: "pdf", maxCount: 4 }
   ]),
   async (req: Request, res: Response) => {
     try {
-      const token = req.cookies.accessToken || (req.headers.authorization && req.headers.authorization.split(" ")[1]);
+      const token =
+        req.cookies.accessToken ||
+        (req.headers.authorization && req.headers.authorization.split(" ")[1]);
       if (!token) {
-        res.status(401).json({
+        return res.status(401).json({
           success: false,
-          message: "Unauthorized , No token provided"
+          message: "Unauthorized, No token provided"
         });
       }
       const decodedToken = jwt.verify(token, process.env.JWT_SECRET!) as {
-        id: string,
-        email: string
+        id: string;
+        email: string;
       };
       const userId = decodedToken.id;
-
       const {
         subscription_name,
         subscription_ctg,
@@ -35,7 +36,6 @@ export const createSubscription = [
         subscription_price,
         subscription_reminder
       } = req.body;
-
       const category = await Category.findById(subscription_ctg);
       if (!category) {
         return res.status(404).json({
@@ -43,16 +43,13 @@ export const createSubscription = [
           message: "Category not found"
         });
       }
-
       const files = req.files as { [fieldname: string]: Express.Multer.File[] };
-
       const photo = files?.photo?.[0]?.path || null;
-      const pdf = files?.pdf?.map(file => file.path) || [];
-
+      const pdf = files?.pdf?.map((file) => file.path) || [];
       const newSubscription = new Subscription({
         user: userId,
         subscription_name,
-        subscription_ctg: new Types.ObjectId(category._id),
+        subscription_ctg: new Types.ObjectId(category._id.toString()),
         subscription_desc,
         subscription_start,
         subscription_end,
@@ -60,21 +57,32 @@ export const createSubscription = [
         subscription_price,
         subscription_reminder,
         photo,
-        pdf: pdf
+        pdf
       });
-
       const savedSubscription = await newSubscription.save();
-
+      const monthYear = new Date(subscription_start).toISOString().slice(0, 7);
+      if (!category.monthly_data) {
+        category.monthly_data = {};
+      }
+      if (!category.monthly_data[monthYear]) {
+        category.monthly_data[monthYear] = {
+          total_spent: 0,
+          subscriptions: []
+        };
+      }
+      category.monthly_data[monthYear].subscriptions.push(savedSubscription._id as Types.ObjectId);
+      category.monthly_data[monthYear].total_spent += savedSubscription.subscription_price;
       category.subscriptions.push(savedSubscription as ISubscriptions);
-
+      console.log("Before save: ", category.monthly_data);
       await category.save();
-      
+      console.log("After save: ", category.monthly_data);
       res.status(200).json({
         success: true,
         message: "Subscription created successfully",
-        subscription: newSubscription
+        subscription: savedSubscription
       });
     } catch (error) {
+      console.error(error);
       res.status(500).json({
         success: false,
         message: "Error creating subscription"
@@ -83,9 +91,14 @@ export const createSubscription = [
   }
 ];
 
+
+
+
 export const getUserSubscription = async (req: Request, res: Response) => {
   try {
-    const token = req.cookies.accessToken || (req.headers.authorization && req.headers.authorization.split(" ")[1]);
+    const token =
+      req.cookies.accessToken ||
+      (req.headers.authorization && req.headers.authorization.split(" ")[1]);
     if (!token) {
       return res.status(401).json({
         success: false,
@@ -106,7 +119,7 @@ export const getUserSubscription = async (req: Request, res: Response) => {
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: "Internal server error",
+      message: "Internal server error"
     });
   }
 };
@@ -114,7 +127,9 @@ export const getUserSubscription = async (req: Request, res: Response) => {
 export const deleteSubscription = [
   async (req: Request, res: Response) => {
     try {
-      const token = req.cookies.accessToken || (req.headers.authorization && req.headers.authorization.split(" ")[1]);
+      const token =
+        req.cookies.accessToken ||
+        (req.headers.authorization && req.headers.authorization.split(" ")[1]);
       if (!token) {
         return res.status(401).json({
           success: false,
@@ -126,7 +141,10 @@ export const deleteSubscription = [
       };
       const userId = decodedToken.id;
       const subscriptionId = req.params.id;
-      const subscription = Subscription.findOne({ _id: subscriptionId, user: userId });
+      const subscription = Subscription.findOne({
+        _id: subscriptionId,
+        user: userId
+      });
       if (!subscription) {
         return res.status(404).json({
           success: false,
@@ -142,11 +160,11 @@ export const deleteSubscription = [
       return res.status(500).json({
         success: false,
         message: "Internal server error",
-        error: (error as Error).message,
+        error: (error as Error).message
       });
     }
   }
-]
+];
 
 export const updateSubscription = [
   upload.fields([
@@ -155,45 +173,62 @@ export const updateSubscription = [
   ]),
   async (req: Request, res: Response) => {
     try {
-      const token = req.cookies.accessToken || (req.headers.authorization && req.headers.authorization.split(" ")[1]);
+      const token =
+        req.cookies.accessToken ||
+        (req.headers.authorization && req.headers.authorization.split(" ")[1]);
       if (!token) {
         return res.status(401).json({
           success: false,
           message: "Unauthorized, No token provided"
         });
       }
-      const decodedToken = jwt.verify(token, process.env.JWT_SECRET!) as { id: string };
+      const decodedToken = jwt.verify(token, process.env.JWT_SECRET!) as {
+        id: string;
+      };
       const userId = decodedToken.id;
       const subscriptionId = req.params.id;
 
-      const subscription = await Subscription.findOne({ _id: subscriptionId, user: userId });
+      const subscription = await Subscription.findOne({
+        _id: subscriptionId,
+        user: userId
+      });
       if (!subscription) {
         return res.status(404).json({
           success: false,
-          message: "Subscription not found /  not authorized to delete",
+          message: "Subscription not found /  not authorized to delete"
         });
       }
-      const { subscription_name,
+      const {
+        subscription_name,
         subscription_ctg,
         subscription_desc,
         subscription_start,
         subscription_end,
         subscription_billing_cycle,
         subscription_price,
-        subscription_reminder } = req.body;
+        subscription_reminder
+      } = req.body;
 
       const files = req.files as { [fieldname: string]: Express.Multer.File[] };
       const photo = files?.photo?.[0]?.path || subscription.photo;
-      const pdf = files?.pdf?.map(file => file.path) || subscription.pdf;
+      const pdf = files?.pdf?.map((file) => file.path) || subscription.pdf;
 
-      subscription.subscription_name = subscription_name || subscription.subscription_name;
-      subscription.subscription_ctg = subscription_ctg || subscription.subscription_ctg;
-      subscription.subscription_desc = subscription_desc || subscription.subscription_desc;
-      subscription.subscription_start = subscription_start || subscription.subscription_start;
-      subscription.subscription_end = subscription_end || subscription.subscription_end;
-      subscription.subscription_billing_cycle = subscription_billing_cycle || subscription.subscription_billing_cycle;
-      subscription.subscription_price = subscription_price || subscription.subscription_price;
-      subscription.subscription_reminder = subscription_reminder || subscription.subscription_reminder;
+      subscription.subscription_name =
+        subscription_name || subscription.subscription_name;
+      subscription.subscription_ctg =
+        subscription_ctg || subscription.subscription_ctg;
+      subscription.subscription_desc =
+        subscription_desc || subscription.subscription_desc;
+      subscription.subscription_start =
+        subscription_start || subscription.subscription_start;
+      subscription.subscription_end =
+        subscription_end || subscription.subscription_end;
+      subscription.subscription_billing_cycle =
+        subscription_billing_cycle || subscription.subscription_billing_cycle;
+      subscription.subscription_price =
+        subscription_price || subscription.subscription_price;
+      subscription.subscription_reminder =
+        subscription_reminder || subscription.subscription_reminder;
       subscription.photo = photo;
       subscription.pdf = pdf;
 
@@ -206,7 +241,7 @@ export const updateSubscription = [
     } catch (error) {
       res.status(500).json({
         success: false,
-        message: "Internal server error",
+        message: "Internal server error"
       });
     }
   }
@@ -214,7 +249,9 @@ export const updateSubscription = [
 
 export const updatePaidStatus = async (req: Request, res: Response) => {
   try {
-    const token = req.cookies.accessToken || (req.headers.authorization && req.headers.authorization.split(" ")[1]);
+    const token =
+      req.cookies.accessToken ||
+      (req.headers.authorization && req.headers.authorization.split(" ")[1]);
     if (!token) {
       return res.status(401).json({
         success: false,
@@ -226,7 +263,7 @@ export const updatePaidStatus = async (req: Request, res: Response) => {
       email: string;
     };
     const userId = decodedToken.id;
-    const { id } = req.params; 
+    const { id } = req.params;
     const { is_paid } = req.body;
     if (typeof is_paid !== "boolean") {
       return res.status(400).json({
@@ -237,7 +274,7 @@ export const updatePaidStatus = async (req: Request, res: Response) => {
     const updatedSubscription = await Subscription.findOneAndUpdate(
       { _id: id, user: userId },
       { is_paid },
-      { new: true } 
+      { new: true }
     );
     if (!updatedSubscription) {
       return res.status(404).json({
@@ -257,5 +294,3 @@ export const updatePaidStatus = async (req: Request, res: Response) => {
     });
   }
 };
-
-
