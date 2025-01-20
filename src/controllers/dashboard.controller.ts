@@ -19,8 +19,7 @@ export const getDashboardData = async (req: Request, res: Response) => {
     };
     const userId = decodedToken.id;
     const subscriptions = await Subscription.find({ user: userId });
-    const categories = await Categories.find({user: userId});
-
+    const categories = await Categories.find({ user: userId });
     const totalSubscriptions = subscriptions.length;
     const dueSubscriptions = subscriptions.filter(
       (sub) => new Date(sub.subscription_end) < new Date()
@@ -31,30 +30,39 @@ export const getDashboardData = async (req: Request, res: Response) => {
       0
     );
 
-    const graphData: Record<string, { date: string; spendings: number }[]> = {};
+    const graphData: { category_name: string; data: { date: string; spendings: number }[] }[] = [];
 
     categories.forEach((category) => {
-        const month = new Date(category.createdAt).toLocaleString("default", {month: "short"});
-        if (!graphData[category.category_name]) {
-            graphData[category.category_name] = [];
-        }
-        graphData[category.category_name].push({
+      const month = new Date(category.createdAt).toLocaleString("default", { month: "short" });
+      
+      const existingCategory = graphData.find(item => item.category_name === category.category_name);
+      if (existingCategory) {
+        existingCategory.data.push({
+          date: month,
+          spendings: category.spendings
+        });
+      } else {
+        graphData.push({
+          category_name: category.category_name,
+          data: [{
             date: month,
             spendings: category.spendings
+          }]
         });
+      }
     });
 
     const upcomingRenewals = subscriptions.filter((sub) => {
-        const currentDate = new Date();
-        const subscriptionEndDate = new Date(sub.subscription_end);
-        const timeDifference = subscriptionEndDate.getTime() - currentDate.getTime();
-        const daysRemaining = timeDifference / (1000*3600*24);
-        return daysRemaining <=7 && daysRemaining>0;
+      const currentDate = new Date();
+      const subscriptionEndDate = new Date(sub.subscription_end);
+      const timeDifference = subscriptionEndDate.getTime() - currentDate.getTime();
+      const daysRemaining = timeDifference / (1000 * 3600 * 24);
+      return daysRemaining <= 7 && daysRemaining > 0;
     }).map((sub) => ({
-        subscription_name: sub.subscription_name,
-        subscription_price: sub.subscription_price,
-        subscription_end: sub.subscription_end
-    }))
+      subscription_name: sub.subscription_name,
+      subscription_price: sub.subscription_price,
+      subscription_end: sub.subscription_end
+    }));
 
     res.status(200).json({
       success: true,
