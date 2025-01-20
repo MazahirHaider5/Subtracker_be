@@ -57,7 +57,9 @@ export const createCategory = async (req: Request, res: Response) => {
 
 export const getCategories = async (req: Request, res: Response) => {
   try {
-    const token = req.cookies.accessToken || (req.headers.authorization && req.headers.authorization.split(" ")[1]);
+    const token =
+      req.cookies.accessToken ||
+      (req.headers.authorization && req.headers.authorization.split(" ")[1]);
     if (!token) {
       return res.status(401).json({
         success: false,
@@ -69,11 +71,28 @@ export const getCategories = async (req: Request, res: Response) => {
       email: string;
     };
     const userId = decodedToken.id;
-    const categories = await Category.find({ user: userId }).populate("subscriptions").exec();
+    const categories = await Category.find({ user: userId })
+      .populate("subscriptions")
+      .exec();
+      categories.forEach(category => {
+        console.log(`Category: ${category.category_name}`);
+        category.subscriptions.forEach(sub => {
+          console.log(`Subscription: ${sub.subscription_name}, Paid: ${sub.is_paid}`);
+        });
+      });
+      const updatedCategories = categories.map(category => {
+        const activeSubscriptions = category.subscriptions.filter(
+          (sub) => sub.is_paid === true
+        ).length;
+        return {
+          ...category.toObject(),
+          active_subscriptions: activeSubscriptions,
+        };
+      });
     res.status(200).json({
       success: true,
       message: "Categories fetched successfully",
-      categories
+      categories: updatedCategories
     });
   } catch (error) {
     res.status(500).json({
@@ -85,7 +104,9 @@ export const getCategories = async (req: Request, res: Response) => {
 
 export const deleteCategory = async (req: Request, res: Response) => {
   try {
-    const token = req.cookies.accessToken || (req.headers.authorization && req.headers.authorization.split(" ")[1]);
+    const token =
+      req.cookies.accessToken ||
+      (req.headers.authorization && req.headers.authorization.split(" ")[1]);
 
     if (!token) {
       return res.status(401).json({
@@ -123,7 +144,9 @@ export const deleteCategory = async (req: Request, res: Response) => {
 
 export const updateCategory = async (req: Request, res: Response) => {
   try {
-      const token = req.cookies.accessToken || (req.headers.authorization && req.headers.authorization.split(" ")[1]);
+    const token =
+      req.cookies.accessToken ||
+      (req.headers.authorization && req.headers.authorization.split(" ")[1]);
 
     if (!token) {
       return res.status(401).json({
@@ -173,3 +196,49 @@ export const updateCategory = async (req: Request, res: Response) => {
     });
   }
 };
+
+export const getCategoriesSum = async (req: Request, res: Response) => {
+  try {
+    const token =
+      req.cookies.accessToken ||
+      (req.headers.authorization && req.headers.authorization.split(" ")[1]);
+
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized, token not found"
+      });
+    }
+
+    const decodedToken = jwt.verify(token, process.env.JWT_SECRET!) as {
+      id: string;
+    };
+    const userId = decodedToken.id;
+
+    const categories = await Category.find({ user: userId });
+
+    let categoryBudget = 0;
+    let totalSpendings = 0;
+
+    categories.forEach((category) => {
+      console.log(`Category: ${category.category_name}`);
+      console.log(`Total Budget: ${category.total_budget}`);
+      console.log(`Spendings: ${category.spendings}`);
+
+      categoryBudget += category.category_budget;
+      totalSpendings += category.spendings;
+    });
+    res.status(200).json({
+      success: true,
+      message: "Categories data fetched successfully",
+      total_budget: categoryBudget,
+      total_spendings: totalSpendings
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Error fetching sum, internal server error"
+    });
+  }
+};
+

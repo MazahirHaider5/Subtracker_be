@@ -1,9 +1,10 @@
 import mongoose, { Schema, Document, Types } from "mongoose";
+import { ISubscriptions } from "./subscriptions.model";
 
 export interface ICategory extends Document {
   _id: string;
   user: Types.ObjectId;
-  subscriptions: Types.ObjectId[];
+  subscriptions: ISubscriptions[];
   category_name: string;
   category_desc: string;
   category_budget: number;

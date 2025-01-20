@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import Subscription from "../models/subscriptions.model";
+import Subscription, { ISubscriptions } from "../models/subscriptions.model";
 import Category from "../models/categories.model";
 import { upload } from "../config/multer";
 import jwt from "jsonwebtoken";
@@ -65,7 +65,7 @@ export const createSubscription = [
 
       const savedSubscription = await newSubscription.save();
 
-      category.subscriptions.push(savedSubscription._id as Types.ObjectId);
+      category.subscriptions.push(savedSubscription as ISubscriptions);
 
       await category.save();
       
@@ -211,3 +211,51 @@ export const updateSubscription = [
     }
   }
 ];
+
+export const updatePaidStatus = async (req: Request, res: Response) => {
+  try {
+    const token = req.cookies.accessToken || (req.headers.authorization && req.headers.authorization.split(" ")[1]);
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized, No token provided"
+      });
+    }
+    const decodedToken = jwt.verify(token, process.env.JWT_SECRET!) as {
+      id: string;
+      email: string;
+    };
+    const userId = decodedToken.id;
+    const { id } = req.params; 
+    const { is_paid } = req.body;
+    if (typeof is_paid !== "boolean") {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid input. 'is_paid' must be a boolean value."
+      });
+    }
+    const updatedSubscription = await Subscription.findOneAndUpdate(
+      { _id: id, user: userId },
+      { is_paid },
+      { new: true } 
+    );
+    if (!updatedSubscription) {
+      return res.status(404).json({
+        success: false,
+        message: "Subscription not found or not authorized"
+      });
+    }
+    res.status(200).json({
+      success: true,
+      message: "Subscription updated successfully",
+      subscription: updatedSubscription
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Internal server error"
+    });
+  }
+};
+
+
