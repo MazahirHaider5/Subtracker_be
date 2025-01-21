@@ -81,10 +81,17 @@ export const getCategories = async (req: Request, res: Response) => {
         const activeSubscriptions = category.subscriptions.filter(
           (sub) => sub.is_paid === true
         ).length;
+        const monthlyDataArray = Object.entries(category.monthly_data || {}).map(
+          ([date, data]: [string, any]) => ({
+            date,
+            total_spent: data.total_spent,
+            subscriptions: data.subscriptions
+          })
+        );
         return {
           ...category,
           active_subscriptions: activeSubscriptions,
-          monthly_data: JSON.parse(JSON.stringify(category.monthly_data))
+          monthly_data: monthlyDataArray
         };
       });
     res.status(200).json({
