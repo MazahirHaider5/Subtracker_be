@@ -4,7 +4,7 @@ import mongoose, { Schema, Document } from "mongoose";
 export interface IUser extends Document {
   _id: string;
   googleId?: string;
-  appleId? : string;
+  appleId?: string;
   email: string;
   name: string;
   phone?: string;
@@ -21,7 +21,9 @@ export interface IUser extends Document {
   currency: string;
   is_biomatric: boolean;
   is_two_factor: boolean;
-  is_email_notification: boolean; 
+  is_email_notification: boolean;
+  signup_date: Date;
+  last_login: Date;
 }
 
 // Mongoose schema
@@ -88,6 +90,16 @@ const UserSchema: Schema = new Schema<IUser>({
     type: Boolean,
     default: false
   },
+  signup_date: {
+    type: Date,
+    default: null
+  },
+  last_login: {
+    type: Date,
+    default: null
+  },
+  reset_token: { type: String },
+  reset_token_expiry: { type: Date }
 });
 
 export default mongoose.model<IUser>("User", UserSchema);

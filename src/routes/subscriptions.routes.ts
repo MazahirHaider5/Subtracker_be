@@ -11,4 +11,3 @@ router.patch("/updateSubscription/:id", verifyToken, updateSubscription);
 router.patch("/updatePaidStatus/:id", verifyToken, updatePaidStatus);
 
 export default router;
- ////

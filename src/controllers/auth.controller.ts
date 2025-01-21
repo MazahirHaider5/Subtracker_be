@@ -17,7 +17,6 @@ export const login = async (req: Request, res: Response) => {
       .json({ success: false, message: "Email and password are required" });
   }
   try {
-    // Use Mongoose to find the user by email
     const user = await User.findOne({ email }).select(
       "id name email password role domain port secret otp otp_expiry is_verified language currency is_biomatric is_two_factor is_email_notification stripe_customer_id"
     );
@@ -28,7 +27,6 @@ export const login = async (req: Request, res: Response) => {
         .json({ success: false, message: "User not found" });
     }
 
-    // Compare passwords
     const passwordMatch = await comparePassword(password, user.password ?? "");
     if (!passwordMatch) {
       return res
@@ -36,17 +34,15 @@ export const login = async (req: Request, res: Response) => {
         .json({ success: false, message: "Incorrect password" });
     }
 
-    // Cast the Mongoose user object to match the User type expected by JWT functions
     const userPayload: IUser = user.toObject();
     delete userPayload.password; 
 
     const accessToken = generateAccessToken(userPayload);
     const refreshToken = generateRefreshToken(userPayload);
 
-    // Set cookies with the generated tokens
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production", // Ensure cookies are sent over HTTPS
+      secure: process.env.NODE_ENV === "production", 
       sameSite: "none",
       maxAge: 24 * 60 * 60 * 1000 // 1 day expiration
     });
@@ -56,6 +52,9 @@ export const login = async (req: Request, res: Response) => {
       sameSite: "none",
       maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days expiration
     });
+
+    user.last_login = new Date();
+    await user.save();
 
     return res.status(200).json({
       success: true,

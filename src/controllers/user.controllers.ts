@@ -1,10 +1,12 @@
 import { Request, Response } from "express";
-import User, { IUser } from "../models/users.model";
-import { hashPassword, comparePassword } from "../utils/bcrytp";
-import { generateAccessToken, generateRefreshToken } from "../utils/jwt";
+import User from "../models/users.model";
+import { hashPassword,  } from "../utils/bcrytp";
 import { sendMail } from "../utils/sendMail";
 import { uploadImageOnly } from "../config/multer";
 import jwt from "jsonwebtoken";
+import NodeCache from "node-cache";
+
+const userCache = new NodeCache({stdTTL: 90});
 
 // Helper function to get user by ID or email
 const findUser = async (id: string | undefined, email?: string) => {
@@ -17,7 +19,6 @@ const findUser = async (id: string | undefined, email?: string) => {
   return user;
 };
 
-// Get all users or a single user by query parameters
 export const getUsers = async (req: Request, res: Response) => {
   const { id, email } = req.query;
   try {
@@ -47,8 +48,7 @@ export const getUsers = async (req: Request, res: Response) => {
   }
 };
 
-// Create a new user
-export const createUser = async (req: Request, res: Response) => {
+export const userSignup = async (req: Request, res: Response) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
@@ -58,7 +58,6 @@ export const createUser = async (req: Request, res: Response) => {
   }
 
   try {
-    // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(409).json({
@@ -66,24 +65,26 @@ export const createUser = async (req: Request, res: Response) => {
         message: "User with this email already exists"
       });
     }
-
-    // Hash the password
     const hashedPassword = await hashPassword(password);
-
-    // Generate a 4-digit OTP
     const generatedOTP = Math.floor(1000 + Math.random() * 9000).toString();
+    // const newUser = new User({
+    //   email,
+    //   name: req.body.name || "Subtracker User",
+    //   password: hashedPassword,
+    //   user_type: "",
+    //   otp: generatedOTP,
+    //   otp_expiry: new Date(Date.now() + 90 * 1000), // 90 seconds expiry
+    //   is_verified: false
+    // });
 
-    // Create a new user with is_verified set to false
-    const newUser = new User({
+    userCache.set(email, {
       email,
-      name: req.body.name || "Subtracker User",
+      name: "Subtracker User",
       password: hashedPassword,
-      user_type: "",
       otp: generatedOTP,
-      otp_expiry: new Date(Date.now() + 90 * 1000), // 90 seconds expiry
-      is_verified: false
+      otp_expiry: new Date(Date.now() + 90 * 1000),
+      signup_date: new Date()
     });
-    await newUser.save();
 
     const subject = "Subtrack Email Verification Mail";
     const body = `Your OTP is ${generatedOTP}. It will expire in 90 seconds.`;
@@ -92,7 +93,7 @@ export const createUser = async (req: Request, res: Response) => {
     return res.status(201).json({
       success: true,
       message:
-        "User created successfully. Please verify your OTP to complete registration."
+        "OTP sent to your email. Please verify to complete registration."
     });
   } catch (error) {
     console.error("Error creating user:", error);
@@ -155,28 +156,46 @@ export const verifySignupOtp = async (req: Request, res: Response) => {
   }
 
   try {
-    const user = await User.findOne({ email });
-    if (!user) {
+    const cachedUser = userCache.get(email) as {
+      email: string;
+      name: string;
+      password: string;
+      otp: string;
+      otp_expiry: Date;
+      signup_date: Date;
+    };
+    
+    if (!cachedUser) {
       return res
         .status(404)
-        .json({ success: false, message: "User not found" });
+        .json({ success: false, message: "OTP expired or invalid request" });
     }
 
-    if (user.otp !== otp) {
+    if (cachedUser.otp !== otp) {
       return res.status(400).json({ success: false, message: "Incorrect OTP" });
     }
 
-    if (user.otp_expiry && new Date() > user.otp_expiry) {
+    if (new Date() > new Date(cachedUser.otp_expiry)) {
       return res
         .status(400)
         .json({ success: false, message: "OTP has expired" });
     }
 
-    user.is_verified = true;
-    user.otp = null;
-    user.otp_expiry = null;
+    const newUser = new User({
+      email: cachedUser.email,
+      name: cachedUser.name,
+      password: cachedUser.password,
+      user_type: "",
+      is_verified: true,
+      signup_date: new Date(),
+    });
+    
+    if (!cachedUser.signup_date) {
+      cachedUser.signup_date = new Date();
+    }
 
-    await user.save();
+    await newUser.save();
+    userCache.del(email);
 
     return res.status(200).json({
       success: true,
