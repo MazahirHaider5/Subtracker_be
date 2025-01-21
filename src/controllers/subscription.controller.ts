@@ -27,8 +27,6 @@ export const createSubscription = [
         email: string;
       };
       const userId = decodedToken.id;
-
-      // Extract request body
       const {
         subscription_name,
         subscription_ctg,
@@ -39,8 +37,6 @@ export const createSubscription = [
         subscription_price,
         subscription_reminder
       } = req.body;
-
-      // Fetch the category
       const category = await Category.findById(subscription_ctg);
       if (!category) {
         return res.status(404).json({
@@ -48,13 +44,9 @@ export const createSubscription = [
           message: "Category not found"
         });
       }
-
-      // Handle file uploads
       const files = req.files as { [fieldname: string]: Express.Multer.File[] };
       const photo = files?.photo?.[0]?.path || null;
       const pdf = files?.pdf?.map((file) => file.path) || [];
-
-      // Create the new subscription
       const newSubscription = new Subscription({
         user: userId,
         subscription_name,
@@ -68,41 +60,26 @@ export const createSubscription = [
         photo,
         pdf
       });
-
       const savedSubscription = await newSubscription.save();
-
       if (!category.monthly_data || !(category.monthly_data instanceof Map)) {
         category.monthly_data = new Map<string, { total_spent: number; subscriptions: Types.ObjectId[] }>();
       }
-      
-      
-
-      // Generate Month-Year Key
       const monthYear = new Date(subscription_start).toISOString().slice(0, 7);
-
-      // Check if the key exists, else initialize
       if (!category.monthly_data.has(monthYear)) {
         category.monthly_data.set(monthYear, { total_spent: 0, subscriptions: [] });
       }
-
-      // Update the existing entry
       const monthlyEntry = category.monthly_data.get(monthYear) as { total_spent: number; subscriptions: Types.ObjectId[] };
       monthlyEntry.subscriptions.push(savedSubscription._id as Types.ObjectId);
       monthlyEntry.total_spent += savedSubscription.subscription_price;
 
-      // Save changes
       category.monthly_data.set(monthYear, monthlyEntry);
 
-            category.subscriptions.push(savedSubscription as ISubscriptions);
-
-      // Mark as modified to ensure Mongoose saves the update
-      category.markModified("monthly_data");
+     category.subscriptions.push(savedSubscription as ISubscriptions);
+    category.markModified("monthly_data");
 
       console.log("Before save: ", category.monthly_data);
       await category.save();
       console.log("After save: ", category.monthly_data);
-
-      // Respond
       res.status(200).json({
         success: true,
         message: "Subscription created successfully",
