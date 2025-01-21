@@ -74,6 +74,7 @@ export const getCategories = async (req: Request, res: Response) => {
     const userId = decodedToken.id;
     const categories = await Category.find({ user: userId })
       .populate("subscriptions")
+      .lean()
       .exec();
       
       const updatedCategories = categories.map(category => {
@@ -81,8 +82,9 @@ export const getCategories = async (req: Request, res: Response) => {
           (sub) => sub.is_paid === true
         ).length;
         return {
-          ...category.toObject(),
+          ...category,
           active_subscriptions: activeSubscriptions,
+          monthly_data: JSON.parse(JSON.stringify(category.monthly_data))
         };
       });
     res.status(200).json({

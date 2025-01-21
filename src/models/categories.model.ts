@@ -11,10 +11,18 @@ export interface ICategory extends Document {
   active_subscriptions: number;
   total_budget: number;
   spendings: number;
-  monthly_data: Record<string, { total_spent: number; subscriptions: Types.ObjectId[] }>;
+  monthly_data: Map<string, { total_spent: number; subscriptions: Types.ObjectId[] }>; // Use Map here
   createdAt: Date; 
   updatedAt: Date;
 }
+
+const MonthlyDataSchema = new Schema(
+  {
+    total_spent: { type: Number, default: 0 },
+    subscriptions: [{ type: mongoose.Schema.Types.ObjectId, ref: "Subscriptions" }]
+  },
+  { _id: false }
+);
 
 const CategorySchema: Schema<ICategory> = new Schema(
   {
@@ -54,12 +62,9 @@ const CategorySchema: Schema<ICategory> = new Schema(
       default: 0
     },
     monthly_data: {
-      type: Object, 
-      of: {
-        total_spent: { type: Number, default: 0 },
-        subscriptions: [{ type: mongoose.Schema.Types.ObjectId, ref: "Subscriptions" }]
-      },
-      default: {} 
+      type: Map,
+      of: MonthlyDataSchema,
+      default: {}
     }
   },
   { timestamps: true } 
