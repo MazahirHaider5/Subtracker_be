@@ -12,7 +12,6 @@ export const createSubscription = [
   ]),
   async (req: Request, res: Response) => {
     try {
-      // Token verification
       const token =
         req.cookies.accessToken ||
         (req.headers.authorization && req.headers.authorization.split(" ")[1]);

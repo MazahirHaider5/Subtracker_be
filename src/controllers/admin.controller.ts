@@ -2,9 +2,8 @@ import { Request, Response } from "express";
 import Subscription, { ISubscriptions } from "../models/subscriptions.model";
 import crypto from "crypto";
 import { sendMail } from "../utils/sendMail";
-import jwt from "jsonwebtoken";
-import { Types } from "mongoose";
 import User from "../models/users.model";
+import Complaint from "../models/complaints.model";
 
 export const getAllSubscriptions = async (req: Request, res: Response) => {
   try {
@@ -123,3 +122,22 @@ export const promoteToAdmin = async (req: Request, res: Response) => {
     });
   }
 };
+
+
+export const getAllComplaints = async (req: Request, res: Response) => {
+  try {
+    const complaints = await Complaint.find().populate("user_id", "name email").sort({ createdAt: -1 });
+    return res.status(200).json({
+      success: true,
+      message: "All complaints fetched successfully",
+      complaints
+    });
+  } catch (error) {
+    console.error("Error fetching complaints: ", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error"
+    });
+  }
+};
+
