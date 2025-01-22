@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node dist/app.js",
     "build": "tsc",
+    "vercel-build": "tsc",
     "serve": "node dist/app.js",
     "dev": "nodemon --watch src --exec ts-node src/app.ts",
     "lint": "eslint 'src/**/*.{js,ts}'"
