@@ -62,7 +62,7 @@ app.use(
 // Middleware
 app.use(express.json());
 app.use(cookieParser());
-app.use(rateLimit);
+// app.use(rateLimit);
 
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
