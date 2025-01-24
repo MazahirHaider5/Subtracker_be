@@ -65,7 +65,7 @@ app.use(cookieParser());
 // app.use(rateLimit);
 
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
-
+//
 app.get("/test", (req, res)=> {
   res.status(200).json({message: "server working"})
 })
