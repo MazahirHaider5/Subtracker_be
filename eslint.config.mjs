@@ -20,7 +20,7 @@ export default [
     rules: {
       ...typescriptEslintPlugin.configs.recommended.rules,
       "prettier/prettier": "error",
-      "linebreak-style": ["error", "unix"]
+      "linebreak-style": ["none"]
     }
   },
   {

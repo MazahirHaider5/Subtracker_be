@@ -1,20 +1,23 @@
 import express from "express";
 import {
-    login,
-    logout,
-    requestOtp,
-    resendOtp,
-    resetPassword,
-    verifyOtp
+  login,
+  logout,
+  requestOtp,
+  resendOtp,
+  resetPassword,
+  verifyOtp
 } from "../controllers/auth.controller";
 import {
-    googleCallback,
-    loginWithGoogle
+  googleCallback,
+  loginWithGoogle
 } from "../controllers/googleAuth.controller";
 import { verifyToken } from "../middleware/authenticate";
 import { verifyAccessToken } from "../utils/jwt";
 import { userSignup, verifySignupOtp } from "../controllers/user.controllers";
-import { appleCallback, loginWithApple } from "../controllers/appleAuth.controller";
+import {
+  appleCallback,
+  loginWithApple
+} from "../controllers/appleAuth.controller";
 
 const router = express.Router();
 
@@ -38,7 +41,11 @@ router.post("/apple/callback", appleCallback);
 // router.post("/refresh-token", refreshAccessToken);
 
 router.get("/protected", verifyAccessToken, (req, res) => {
-    res.json({ success: true, message: "You have access to this route!", user: req.user });
+  res.json({
+    success: true,
+    message: "You have access to this route!",
+    user: req.user
   });
+});
 
 export default router;
