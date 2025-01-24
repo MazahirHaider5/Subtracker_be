@@ -20,25 +20,38 @@ const findUser = async (id: string | undefined, email?: string) => {
 };
 
 export const getUsers = async (req: Request, res: Response) => {
-  const { id, email } = req.query;
+  const { id, email, user_type } = req.query;
   try {
+    if(user_type && !["enterprise", "admin"].includes(user_type as string)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid role provided"
+      });
+    }
     if (id || email) {
-      const user = await findUser(id as string, email as string);
+      const user = await User.findOne({
+        $or: [{ _id: id }, { email: email }],
+        ...(user_type && { user_type })
+      }).select("-password");
+
       if (!user) {
-        return res
-          .status(404)
-          .json({ success: false, message: "User not found" });
+        return res.status(404).json({ success: false, message: "User not found" });
       }
       return res.status(200).json({ success: true, data: user });
     }
-    const users = await User.find().select("-password");
-    if (!users || users.length === 0) {
-      return res
-        .status(404)
-        .json({ success: false, message: "No users found" });
+
+    const query: any = {};
+    if (user_type) query.user_type = user_type;
+
+    const users = await User.find(query).select("-password");
+
+    if (!users.length) {
+      return res.status(404).json({ success: false, message: "No users found" });
     }
+
     return res.status(200).json({ success: true, data: users });
-  } catch (error) {
+
+  }  catch (error) {
     console.error("Error fetching users:", error);
     return res.status(500).json({
       success: false,

@@ -11,7 +11,8 @@ import {
 
 const router = Router();
 
-router.get("/allUsers",verifyToken, getUsers);
+router.get("/allUsers", getUsers);
+
 router.patch("/updateUser", verifyToken, updateUser);
 
 router.patch("/updateSpecificDetails", verifyToken, updateSpecificFields);
