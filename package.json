@@ -2,7 +2,7 @@
   "name": "subtracker-backend",
   "version": "1.0.0",
   "description": "Backend for Subtracker",
-  "main": "/dist/app.js",
+  "main": "dist/app.js",
   "scripts": {
     "start": "tsc && node dist/app.js",
     "build": "tsc",
