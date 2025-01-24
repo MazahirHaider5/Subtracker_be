@@ -4,7 +4,7 @@
   "description": "Backend for Subtracker",
   "main": "/dist/app.js",
   "scripts": {
-    "start": "node dist/app.js",
+    "start": "tsc && node dist/app.js",
     "build": "tsc",
     "vercel-build": "npm run build",
     "serve": "node dist/app.js",
