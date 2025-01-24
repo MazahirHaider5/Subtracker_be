@@ -15,8 +15,12 @@ passport.use(
       clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
       callbackURL: "http://localhost:3000/auth/google/callback"
     },
-    async (accessToken: string, refreshToken: string, profile: Profile, done: VerifyCallback) => {
-      
+    async (
+      accessToken: string,
+      refreshToken: string,
+      profile: Profile,
+      done: VerifyCallback
+    ) => {
       try {
         let user = await User.findOne({ email: profile.emails?.[0].value });
         if (!user) {
@@ -32,7 +36,11 @@ passport.use(
         }
         const newAccessToken = generateAccessToken(user);
         const newRefreshToken = generateRefreshToken(user);
-        done(null, { user, accessToken: newAccessToken, refreshToken: newRefreshToken });
+        done(null, {
+          user,
+          accessToken: newAccessToken,
+          refreshToken: newRefreshToken
+        });
       } catch (error) {
         done(error, false);
       }
@@ -42,9 +50,8 @@ passport.use(
 
 export const loginWithGoogle = passport.authenticate("google", {
   scope: ["profile", "email"],
-  session: false,
+  session: false
 });
-
 
 export const googleCallback = (req: Request, res: Response, next: any) => {
   passport.authenticate("google", { session: false }, (err, data, info) => {
@@ -52,13 +59,13 @@ export const googleCallback = (req: Request, res: Response, next: any) => {
       console.error("Google OAuth Error:", err);
       return res.status(500).json({
         success: false,
-        message: "Authentication failed due to an internal error.",
+        message: "Authentication failed due to an internal error."
       });
     }
     if (!data) {
       return res.status(401).json({
         success: false,
-        message: "Authentication failed. No user data returned.",
+        message: "Authentication failed. No user data returned."
       });
     }
 
@@ -77,16 +84,8 @@ export const googleCallback = (req: Request, res: Response, next: any) => {
       sameSite: "strict",
       maxAge: 7 * 24 * 60 * 60 * 1000
     });
-
-
+    res.redirect(`${process.env.FRONT_END_SUCCESS_URL}`);
     // Send response with tokens
-    res.status(200).json({
-      success: true,
-      message: "Login successful",
-      user,
-      accessToken,
-      refreshToken,
-    });
   })(req, res, next);
 };
 
