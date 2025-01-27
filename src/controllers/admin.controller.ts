@@ -123,7 +123,6 @@ export const promoteToAdmin = async (req: Request, res: Response) => {
   }
 };
 
-
 export const getAllComplaints = async (req: Request, res: Response) => {
   try {
     const complaints = await Complaint.find().populate("user_id", "name email").sort({ createdAt: -1 });
