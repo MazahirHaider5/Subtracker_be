@@ -57,7 +57,8 @@ const UserSchema: Schema = new Schema<IUser>({
   user_type: {
     type: String,
     enum: ["enterprise", "admin"],
-    required: true 
+    default: "enterprise",
+    required: true
   },
   otp: {
     type: String,
