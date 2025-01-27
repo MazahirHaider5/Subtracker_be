@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import Subscription, { ISubscriptions } from "../models/subscriptions.model";
 import crypto from "crypto";
+
 import { sendMail } from "../utils/sendMail";
 import User from "../models/users.model";
 import Complaint from "../models/complaints.model";
@@ -54,7 +55,7 @@ export const sendAdminPromotionLink = async (req: Request, res: Response) => {
         }
       }
     );
-   
+
     console.log("Token sent:", token);
     const promotionLink = `http://localhost:3000/admin/promoteToAdmin?token=${token}`;
 
@@ -125,7 +126,9 @@ export const promoteToAdmin = async (req: Request, res: Response) => {
 
 export const getAllComplaints = async (req: Request, res: Response) => {
   try {
-    const complaints = await Complaint.find().populate("user_id", "name email").sort({ createdAt: -1 });
+    const complaints = await Complaint.find()
+      .populate("user_id", "name email")
+      .sort({ createdAt: -1 });
     return res.status(200).json({
       success: true,
       message: "All complaints fetched successfully",
@@ -140,3 +143,30 @@ export const getAllComplaints = async (req: Request, res: Response) => {
   }
 };
 
+export const SendSetPasswordLink = async (req: Request, res: Response) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      res
+        .status(400)
+        .json({ success: false, message: "all fields are required" });
+    }
+    const check = await User.findOne({ email: email });
+    if (check) {
+      return res
+        .status(404)
+        .json({ success: false, message: "user already exists" });
+    }
+    const user = await User.create({
+      email
+    });
+    const passwordSetLink = `http://localhost:3000/admin/passwordSet`;
+
+    const subject = "Set Password  Request";
+    const body = `Click the link below to become set password:\n\n${passwordSetLink}\n\n.`;
+    await sendMail(email, subject, body);
+    res.status(200).json({ success: false, message: "Link sent succesfully" });
+  } catch (error) {
+    res.status(400).json({ success: false, message: error });
+  }
+};

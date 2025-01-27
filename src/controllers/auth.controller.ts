@@ -35,14 +35,14 @@ export const login = async (req: Request, res: Response) => {
     }
 
     const userPayload: IUser = user.toObject();
-    delete userPayload.password; 
+    delete userPayload.password;
 
     const accessToken = generateAccessToken(userPayload);
     const refreshToken = generateRefreshToken(userPayload);
 
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production", 
+      secure: process.env.NODE_ENV === "production",
       sameSite: "none",
       maxAge: 24 * 60 * 60 * 1000 // 1 day expiration
     });
@@ -60,7 +60,7 @@ export const login = async (req: Request, res: Response) => {
       success: true,
       message: "Login successful",
       user: userPayload,
-      accessToken : accessToken,
+      accessToken: accessToken,
       refreshToken: refreshToken
     });
   } catch (error) {

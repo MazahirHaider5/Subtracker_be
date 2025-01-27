@@ -1,12 +1,12 @@
 import { Request, Response } from "express";
 import User from "../models/users.model";
-import { hashPassword,  } from "../utils/bcrytp";
+import { hashPassword } from "../utils/bcrytp";
 import { sendMail } from "../utils/sendMail";
 import { uploadImageOnly } from "../config/multer";
 import jwt from "jsonwebtoken";
 import NodeCache from "node-cache";
 
-const userCache = new NodeCache({stdTTL: 90});
+const userCache = new NodeCache({ stdTTL: 90 });
 
 // Helper function to get user by ID or email
 const findUser = async (id: string | undefined, email?: string) => {
@@ -22,7 +22,7 @@ const findUser = async (id: string | undefined, email?: string) => {
 export const getUsers = async (req: Request, res: Response) => {
   const { id, email, user_type } = req.query;
   try {
-    if(user_type && !["enterprise", "admin"].includes(user_type as string)) {
+    if (user_type && !["enterprise", "admin"].includes(user_type as string)) {
       return res.status(400).json({
         success: false,
         message: "Invalid role provided"
@@ -35,7 +35,9 @@ export const getUsers = async (req: Request, res: Response) => {
       }).select("-password");
 
       if (!user) {
-        return res.status(404).json({ success: false, message: "User not found" });
+        return res
+          .status(404)
+          .json({ success: false, message: "User not found" });
       }
       return res.status(200).json({ success: true, data: user });
     }
@@ -46,12 +48,13 @@ export const getUsers = async (req: Request, res: Response) => {
     const users = await User.find(query).select("-password");
 
     if (!users.length) {
-      return res.status(404).json({ success: false, message: "No users found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "No users found" });
     }
 
     return res.status(200).json({ success: true, data: users });
-
-  }  catch (error) {
+  } catch (error) {
     console.error("Error fetching users:", error);
     return res.status(500).json({
       success: false,
@@ -105,8 +108,7 @@ export const userSignup = async (req: Request, res: Response) => {
 
     return res.status(201).json({
       success: true,
-      message:
-        "OTP sent to your email. Please verify to complete registration."
+      message: "OTP sent to your email. Please verify to complete registration."
     });
   } catch (error) {
     console.error("Error creating user:", error);
@@ -177,7 +179,7 @@ export const verifySignupOtp = async (req: Request, res: Response) => {
       otp_expiry: Date;
       signup_date: Date;
     };
-    
+
     if (!cachedUser) {
       return res
         .status(404)
@@ -200,9 +202,9 @@ export const verifySignupOtp = async (req: Request, res: Response) => {
       password: cachedUser.password,
       user_type: "",
       is_verified: true,
-      signup_date: new Date(),
+      signup_date: new Date()
     });
-    
+
     if (!cachedUser.signup_date) {
       cachedUser.signup_date = new Date();
     }
@@ -433,5 +435,30 @@ export const updateSpecificFields = async (req: Request, res: Response) => {
       success: false,
       message: "Error updating user fields"
     });
+  }
+};
+
+export const setPassword = async (req: Request, res: Response) => {
+  const { email, password } = req.body;
+  if (!email || !password) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Email and password are required" });
+  }
+  try {
+    const user = await User.findOne({ email: email });
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "user doesnot exits" });
+    }
+    const hashedPassword = await hashPassword(password);
+    user.password = hashedPassword;
+    await user.save();
+    res
+      .status(200)
+      .json({ success: true, message: "password set succesfully" });
+  } catch (error) {
+    res.status(400).json({ success: false, message: error });
   }
 };
