@@ -3,8 +3,14 @@ import mongoose, { Schema, Document, Types } from "mongoose";
 export interface IComplaint extends Document {
   user_id: Types.ObjectId;
   ticket_id: string;
-  issue: "Technical Issue" | "Downtime" | "Billing Issue" | "Account Access" | "Other";
+  issue:
+    | "Technical Issue"
+    | "Downtime"
+    | "Billing Issue"
+    | "Account Access"
+    | "Other";
   subject: string;
+  status: string;
   description: string;
   createdAt: Date;
 }
@@ -19,12 +25,23 @@ const ComplaintSchema: Schema = new Schema<IComplaint>(
     ticket_id: { type: String, unique: true, default: generateTicketID },
     issue: {
       type: String,
-      enum: ["Technical Issue", "Downtime", "Billing Issue", "Account Access", "Other"],
-      required: true,
+      enum: [
+        "Technical Issue",
+        "Downtime",
+        "Billing Issue",
+        "Account Access",
+        "Other"
+      ],
+      required: true
+    },
+    status: {
+      type: String,
+      enum: ["Pending", "Resolved"],
+      default: "Pending"
     },
     subject: { type: String, required: true },
     description: { type: String, required: true },
-    createdAt: { type: Date, default: Date.now },
+    createdAt: { type: Date, default: Date.now }
   },
   { timestamps: true }
 );

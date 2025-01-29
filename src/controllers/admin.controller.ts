@@ -129,10 +129,20 @@ export const getAllComplaints = async (req: Request, res: Response) => {
     const complaints = await Complaint.find()
       .populate("user_id", "name email")
       .sort({ createdAt: -1 });
+
+    const resolved = await Complaint.find({
+      status: "Resolved"
+    }).countDocuments();
+    const pending = await Complaint.find({
+      status: "Pending"
+    }).countDocuments();
     return res.status(200).json({
       success: true,
       message: "All complaints fetched successfully",
-      complaints
+      complaints,
+      resolved,
+      pending,
+      total: complaints.length
     });
   } catch (error) {
     console.error("Error fetching complaints: ", error);
