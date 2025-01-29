@@ -180,3 +180,33 @@ export const SendSetPasswordLink = async (req: Request, res: Response) => {
     res.status(400).json({ success: false, message: error });
   }
 };
+
+export const replyToComplaint = async (req: Request, res: Response) => {
+  const { ticket_id, replyText, email } = req.body;
+  if (!ticket_id || !replyText || !email) {
+    return res
+      .status(400)
+      .json({ success: false, message: "fields are missing" });
+  }
+  try {
+    const complaint = await Complaint.findById(ticket_id);
+    if (!complaint) {
+      return res
+        .status(404)
+        .json({ success: false, message: "ticket not found" });
+    }
+    const user = await User.findOne({ email: email });
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "user not found" });
+    }
+    await sendMail(email, "Ticket reply", replyText);
+    complaint.status = "Resolved";
+    complaint.reply = replyText;
+    await complaint.save();
+    res.status(200).json({ success: true, message: "reply done succesfully" });
+  } catch (error: any) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+};

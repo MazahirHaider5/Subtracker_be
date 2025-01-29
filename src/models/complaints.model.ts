@@ -12,6 +12,7 @@ export interface IComplaint extends Document {
   subject: string;
   status: string;
   description: string;
+  reply: string;
   createdAt: Date;
 }
 
@@ -41,6 +42,10 @@ const ComplaintSchema: Schema = new Schema<IComplaint>(
     },
     subject: { type: String, required: true },
     description: { type: String, required: true },
+    reply: {
+      type: String,
+      default: ""
+    },
     createdAt: { type: Date, default: Date.now }
   },
   { timestamps: true }
