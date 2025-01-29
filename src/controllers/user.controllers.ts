@@ -434,6 +434,7 @@ export const setPassword = async (req: Request, res: Response) => {
     }
     const hashedPassword = await hashPassword(password);
     user.password = hashedPassword;
+    user.is_verified = true;
     await user.save();
     res
       .status(200)

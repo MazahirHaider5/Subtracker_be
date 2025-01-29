@@ -160,7 +160,7 @@ export const SendSetPasswordLink = async (req: Request, res: Response) => {
     const user = await User.create({
       email
     });
-    const passwordSetLink = `http://localhost:3000/admin/passwordSet`;
+    const passwordSetLink = `${process.env.FRONT_END_URL}/set-password`;
 
     const subject = "Set Password  Request";
     const body = `Click the link below to become set password:\n\n${passwordSetLink}\n\n.`;
