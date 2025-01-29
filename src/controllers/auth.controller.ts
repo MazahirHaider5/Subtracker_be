@@ -33,7 +33,11 @@ export const login = async (req: Request, res: Response) => {
         .status(401)
         .json({ success: false, message: "Incorrect password" });
     }
-
+    if (!user.is_verified) {
+      return res
+        .status(404)
+        .json({ success: false, message: "user not verified" });
+    }
     const userPayload: IUser = user.toObject();
     delete userPayload.password;
 
@@ -121,6 +125,11 @@ export const resendOtp = async (req: Request, res: Response) => {
       return res
         .status(400)
         .json({ success: false, message: "User not found" });
+    }
+    if (user.is_verified) {
+      return res
+        .status(400)
+        .json({ success: false, message: "user already verified" });
     }
     //OTP will be sent only when the previous OTP is expired
     if (user.otp_expiry && new Date() < user.otp_expiry) {

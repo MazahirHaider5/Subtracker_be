@@ -66,7 +66,7 @@ const UserSchema: Schema = new Schema<IUser>({
   },
   otp_expiry: {
     type: Date,
-    default: () => new Date(Date.now() + 10 * 60 * 1000) // 10 minutes from now
+    default: () => new Date(Date.now() + 90 * 1000) // 10 minutes from now
   },
   is_verified: {
     type: Boolean,
