@@ -1,10 +1,12 @@
 import { Request, Response } from "express";
-import User from "../models/users.model";
+import User, { IUser } from "../models/users.model";
+
 import { hashPassword } from "../utils/bcrytp";
 import { sendMail } from "../utils/sendMail";
 import { uploadImageOnly } from "../config/multer";
 import jwt from "jsonwebtoken";
 import NodeCache from "node-cache";
+import { use } from "passport";
 
 const userCache = new NodeCache({ stdTTL: 90 });
 
@@ -65,16 +67,16 @@ export const getUsers = async (req: Request, res: Response) => {
 };
 
 export const userSignup = async (req: Request, res: Response) => {
-  const { email, password } = req.body;
+  const { email, password, userName } = req.body;
 
-  if (!email || !password) {
+  if (!email || !password || !userName) {
     return res
       .status(400)
       .json({ success: false, message: "Missing required fields" });
   }
 
   try {
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({ email: email });
     if (existingUser) {
       return res.status(409).json({
         success: false,
@@ -83,19 +85,17 @@ export const userSignup = async (req: Request, res: Response) => {
     }
     const hashedPassword = await hashPassword(password);
     const generatedOTP = Math.floor(1000 + Math.random() * 9000).toString();
-    // const newUser = new User({
-    //   email,
-    //   name: req.body.name || "Subtracker User",
-    //   password: hashedPassword,
-    //   user_type: "",
-    //   otp: generatedOTP,
-    //   otp_expiry: new Date(Date.now() + 90 * 1000), // 90 seconds expiry
-    //   is_verified: false
-    // });
-
-    userCache.set(email, {
+    const newUser = new User({
       email,
-      name: "Subtracker User",
+      name: userName || "Subtracker User",
+      password: hashedPassword,
+      otp: generatedOTP,
+      is_verified: false
+    });
+
+    const user = await User.create({
+      email,
+      name: userName,
       password: hashedPassword,
       otp: generatedOTP,
       otp_expiry: new Date(Date.now() + 90 * 1000),
@@ -171,46 +171,26 @@ export const verifySignupOtp = async (req: Request, res: Response) => {
   }
 
   try {
-    const cachedUser = userCache.get(email) as {
-      email: string;
-      name: string;
-      password: string;
-      otp: string;
-      otp_expiry: Date;
-      signup_date: Date;
-    };
-
-    if (!cachedUser) {
-      return res
-        .status(404)
-        .json({ success: false, message: "OTP expired or invalid request" });
+    const user: IUser | null = await User.findOne({ email: email });
+    if (!user) {
+      return res.status(404).json({ success: false, message: "user not fou" });
     }
 
-    if (cachedUser.otp !== otp) {
+    if (user?.otp !== otp) {
       return res.status(400).json({ success: false, message: "Incorrect OTP" });
     }
 
-    if (new Date() > new Date(cachedUser.otp_expiry)) {
+    if (
+      user?.otp_expiry &&
+      new Date(user.otp_expiry) instanceof Date &&
+      new Date() > new Date(user.otp_expiry)
+    ) {
       return res
         .status(400)
-        .json({ success: false, message: "OTP has expired" });
+        .json({ success: false, message: "otp is expired" });
     }
-
-    const newUser = new User({
-      email: cachedUser.email,
-      name: cachedUser.name,
-      password: cachedUser.password,
-      user_type: "",
-      is_verified: true,
-      signup_date: new Date()
-    });
-
-    if (!cachedUser.signup_date) {
-      cachedUser.signup_date = new Date();
-    }
-
-    await newUser.save();
-    userCache.del(email);
+    user.is_verified = true;
+    await user.save();
 
     return res.status(200).json({
       success: true,
