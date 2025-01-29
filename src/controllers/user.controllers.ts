@@ -432,6 +432,11 @@ export const setPassword = async (req: Request, res: Response) => {
         .status(404)
         .json({ success: false, message: "user doesnot exits" });
     }
+    if (user.password?.length == 0) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Enter invited email" });
+    }
     const hashedPassword = await hashPassword(password);
     user.password = hashedPassword;
     user.is_verified = true;
