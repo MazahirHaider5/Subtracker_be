@@ -28,85 +28,90 @@ export interface IUser extends Document {
 }
 
 // Mongoose schema
-const UserSchema: Schema = new Schema<IUser>({
-  googleId: { type: String, unique: true, sparse: true },
-  appleId: { type: String, unique: true, sparse: true },
-  email: {
-    type: String,
-    required: true,
-    unique: true
+const UserSchema: Schema = new Schema<IUser>(
+  {
+    googleId: { type: String, unique: true, sparse: true },
+    appleId: { type: String, unique: true, sparse: true },
+    email: {
+      type: String,
+      required: true,
+      unique: true
+    },
+    name: {
+      type: String,
+      required: false
+    },
+    phone: {
+      type: String,
+      required: false
+    },
+    password: {
+      type: String,
+      default: ""
+    },
+    photo: {
+      type: String
+    },
+    stripe_customer_id: {
+      type: String,
+      default: null
+    },
+    user_type: {
+      type: String,
+      enum: ["enterprise", "admin"],
+      default: "enterprise",
+      required: true
+    },
+    otp: {
+      type: String,
+      default: null
+    },
+    otp_expiry: {
+      type: Date,
+      default: () => new Date(Date.now() + 90 * 1000) // 10 minutes from now
+    },
+    is_verified: {
+      type: Boolean,
+      default: false
+    },
+    language: {
+      type: String,
+      default: "English"
+    },
+    currency: {
+      type: String,
+      default: "US"
+    },
+    is_biomatric: {
+      type: Boolean,
+      default: false
+    },
+    is_two_factor: {
+      type: Boolean,
+      default: false
+    },
+    is_active: {
+      type: Boolean,
+      default: true
+    },
+    is_email_notification: {
+      type: Boolean,
+      default: false
+    },
+    signup_date: {
+      type: Date,
+      default: null
+    },
+    last_login: {
+      type: Date,
+      default: null
+    },
+    reset_token: { type: String },
+    reset_token_expiry: { type: Date }
   },
-  name: {
-    type: String,
-    required: false
-  },
-  phone: {
-    type: String,
-    required: false
-  },
-  password: {
-    type: String,
-    default: ""
-  },
-  photo: {
-    type: String
-  },
-  stripe_customer_id: {
-    type: String,
-    default: null
-  },
-  user_type: {
-    type: String,
-    enum: ["enterprise", "admin"],
-    default: "enterprise",
-    required: true
-  },
-  otp: {
-    type: String,
-    default: null
-  },
-  otp_expiry: {
-    type: Date,
-    default: () => new Date(Date.now() + 90 * 1000) // 10 minutes from now
-  },
-  is_verified: {
-    type: Boolean,
-    default: false
-  },
-  language: {
-    type: String,
-    default: "English"
-  },
-  currency: {
-    type: String,
-    default: "US"
-  },
-  is_biomatric: {
-    type: Boolean,
-    default: false
-  },
-  is_two_factor: {
-    type: Boolean,
-    default: false
-  },
-  is_active: {
-    type: Boolean,
-    default: true
-  },
-  is_email_notification: {
-    type: Boolean,
-    default: false
-  },
-  signup_date: {
-    type: Date,
-    default: null
-  },
-  last_login: {
-    type: Date,
-    default: null
-  },
-  reset_token: { type: String },
-  reset_token_expiry: { type: Date }
-});
+  {
+    timestamps: true
+  }
+);
 
 export default mongoose.model<IUser>("User", UserSchema);
