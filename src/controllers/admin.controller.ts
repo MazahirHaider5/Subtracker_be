@@ -299,28 +299,109 @@ export const getDataOnTimeFrame = async (req: Request, res: Response) => {
       typeof req.query.timeframe === "string" ? req.query.timeframe : "weekly";
 
     const startDate = getStartDate(timeframe);
+
     let groupBy, sortKey;
 
+    // Define days of the week and months of the year
+    const daysOfWeek = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+    const monthsOfYear = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec"
+    ];
+
     if (timeframe === "weekly") {
-      groupBy = { $dayOfWeek: "$createdAt" }; // 1 (Sunday) to 7 (Saturday)
+      groupBy = { $dayOfWeek: "$createdAt" }; // Group by day of the week
       sortKey = "_id";
     } else if (timeframe === "monthly") {
-      groupBy = { $month: "$createdAt" }; // 1 (January) to 12 (December)
+      groupBy = { $month: "$createdAt" }; // Group by month
       sortKey = "_id";
     } else if (timeframe === "yearly") {
-      groupBy = { $year: "$createdAt" }; // Group by year (e.g., 2019, 2020, etc.)
+      groupBy = { $year: "$createdAt" }; // Group by year
       sortKey = "_id";
     } else {
       return res.status(400).json({ error: "Invalid timeframe" });
     }
 
+    // Aggregation pipeline
     const data = await User.aggregate([
-      { $match: { createdAt: { $gte: startDate } } },
-      { $group: { _id: groupBy, count: { $sum: 1 } } },
-      { $sort: { [sortKey]: 1 } } // Sort ascending
+      { $match: { createdAt: { $gte: startDate } } }, // Filter by start date
+      { $group: { _id: groupBy, count: { $sum: 1 } } }, // Group by the time frame
+      { $sort: { [sortKey]: 1 } } // Sort by day, month, or year
     ]);
 
-    res.json({ timeframe, data });
+    let result;
+    if (timeframe === "weekly") {
+      // Map data to days of the week
+      result = daysOfWeek.map((day, index) => {
+        // Adjust for 1-based indexing (Sunday is 1)
+        const dayData = data.find((d) => d._id === index + 1);
+        return {
+          day,
+          count: dayData ? dayData.count : 0 // Default to 0 if no data
+        };
+      });
+
+      // Structure data for the response
+      const dataSets = {
+        Weekly: {
+          series: [
+            { name: "Users", type: "area", data: result.map((d) => d.count) }
+          ],
+          categories: daysOfWeek
+        }
+      };
+
+      return res.json(dataSets);
+    } else if (timeframe === "monthly") {
+      // Map data to months
+      result = monthsOfYear.map((month, index) => {
+        const monthData = data.find((d) => d._id === index + 1);
+        return {
+          month,
+          count: monthData ? monthData.count : 0 // Default to 0 if no data
+        };
+      });
+
+      // Structure data for the response
+      const dataSets = {
+        Monthly: {
+          series: [
+            { name: "Users", type: "area", data: result.map((d) => d.count) }
+          ],
+          categories: monthsOfYear
+        }
+      };
+
+      return res.json(dataSets);
+    } else if (timeframe === "yearly") {
+      // Structure yearly data
+      result = data.map((d) => ({
+        year: d._id,
+        count: d.count
+      }));
+
+      const dataSets = {
+        Yearly: {
+          series: [
+            { name: "Users", type: "area", data: result.map((d) => d.count) }
+          ],
+          categories: result.map((d) => d.year.toString())
+        }
+      };
+
+      return res.json(dataSets);
+    }
   } catch (error) {
     res.status(500).json({ error: "Error fetching data", details: error });
   }
