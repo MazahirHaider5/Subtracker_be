@@ -21,6 +21,7 @@ export interface IUser extends Document {
   currency: string;
   is_biomatric: boolean;
   is_two_factor: boolean;
+  is_active: boolean;
   is_email_notification: boolean;
   signup_date: Date;
   last_login: Date;
@@ -87,6 +88,10 @@ const UserSchema: Schema = new Schema<IUser>({
   is_two_factor: {
     type: Boolean,
     default: false
+  },
+  is_active: {
+    type: Boolean,
+    default: true
   },
   is_email_notification: {
     type: Boolean,

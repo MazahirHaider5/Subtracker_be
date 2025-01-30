@@ -6,7 +6,9 @@ import {
   promoteToAdmin,
   sendAdminPromotionLink,
   SendSetPasswordLink,
-  replyToComplaint
+  replyToComplaint,
+  activateOrDeactivateUser,
+  getInfoAboutUsers
 } from "../controllers/admin.controller";
 
 const router = Router();
@@ -18,5 +20,7 @@ router.get("/promoteToAdmin", promoteToAdmin);
 router.get("/getAllComplaints", getAllComplaints);
 router.post("/setPasswordLink", SendSetPasswordLink);
 router.post("/ticketReply", replyToComplaint);
+router.put("/activateOrDeactivate", activateOrDeactivateUser);
+router.get("/getInfoAboutUsers", getInfoAboutUsers);
 
 export default router;

@@ -227,3 +227,68 @@ export const replyToComplaint = async (req: Request, res: Response) => {
     res.status(400).json({ success: false, message: error.message });
   }
 };
+
+export const activateOrDeactivateUser = async (req: Request, res: Response) => {
+  const { action, user_id } = req.query;
+
+  if (!action) {
+    return res
+      .status(400)
+      .json({ success: false, message: "action is not defined" });
+  }
+  if (!(action === "activate" || action === "deactivate")) {
+    return res.status(404).json({
+      success: false,
+      message: "action should be activate or deactivate"
+    });
+  }
+  try {
+    const user = await User.findById(user_id);
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "user not found" });
+    }
+    if (action === "activate") {
+      if (user.is_active) {
+        return res
+          .status(400)
+          .json({ success: false, message: "user is already active" });
+      } else {
+        user.is_active = true;
+        await user.save();
+        return res
+          .status(200)
+          .json({ success: true, message: "user activated successfully" });
+      }
+    } else {
+      if (!user.is_active) {
+        return res
+          .status(400)
+          .json({ success: false, message: "user is already deactivated" });
+      } else {
+        user.is_active = false;
+        await user.save();
+        return res
+          .status(200)
+          .json({ success: true, message: "user deactivated successfully" });
+      }
+    }
+  } catch (error: any) {
+    return res.status(400).json({ success: false, message: error.message });
+  }
+};
+
+export const getInfoAboutUsers = async (req: Request, res: Response) => {
+  try {
+    const activeUsers = await User.find({ is_active: true }).countDocuments();
+    const inactiveUsers = await User.find({
+      is_active: false
+    }).countDocuments();
+    return res
+      .status(200)
+      .json({ success: true, message: { activeUsers, inactiveUsers } });
+  } catch (error: any) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+};
