@@ -213,7 +213,6 @@ export const resetPassword = async (req: Request, res: Response) => {
     user.password = hashedPassword;
     user.otp = null;
     user.otp_expiry = null;
-    user.is_verified = false;
 
     await user.save();
 

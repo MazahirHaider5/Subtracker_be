@@ -201,11 +201,28 @@ export const replyToComplaint = async (req: Request, res: Response) => {
         .status(404)
         .json({ success: false, message: "user not found" });
     }
-    await sendMail(email, "Ticket reply", replyText);
+
+    const emailBody = `
+      Dear ${user.name},
+
+      Thank you for reaching out to us via our support section. We have received your concern regarding ${complaint.issue}, and we appreciate your patience.
+
+      Our Response:
+      ${replyText}
+
+      If you need any further assistance, please feel free to reply to this email or contact us at support@subtracker.com.
+
+      Best regards,
+      Support Team
+      SubTracker
+      support@subtracker.com
+    `;
+
+    await sendMail(email, "Ticket reply", emailBody);
     complaint.status = "Resolved";
     complaint.reply = replyText;
     await complaint.save();
-    res.status(200).json({ success: true, message: "reply done succesfully" });
+    res.status(200).json({ success: true, message: "reply done successfully" });
   } catch (error: any) {
     res.status(400).json({ success: false, message: error.message });
   }
