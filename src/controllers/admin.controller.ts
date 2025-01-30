@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import Subscription, { ISubscriptions } from "../models/subscriptions.model";
+import Subscription from "../models/subscriptions.model";
 import crypto from "crypto";
 
 import { sendMail } from "../utils/sendMail";
@@ -189,7 +189,7 @@ export const replyToComplaint = async (req: Request, res: Response) => {
       .json({ success: false, message: "fields are missing" });
   }
   try {
-    const complaint = await Complaint.findById(ticket_id);
+    const complaint = await Complaint.findOne({ ticket_id });
     if (!complaint) {
       return res
         .status(404)

@@ -2,7 +2,6 @@ import { Request, Response } from "express";
 import { comparePassword, hashPassword } from "../utils/bcrytp";
 import {
   generateAccessToken,
-  generateRefreshToken,
   verifyToken
 } from "../utils/jwt";
 import User, { IUser } from "../models/users.model";
@@ -42,19 +41,12 @@ export const login = async (req: Request, res: Response) => {
     delete userPayload.password;
 
     const accessToken = generateAccessToken(userPayload);
-    const refreshToken = generateRefreshToken(userPayload);
 
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "none",
       maxAge: 24 * 60 * 60 * 1000 // 1 day expiration
-    });
-    res.cookie("refreshToken", refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "none",
-      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days expiration
     });
 
     user.last_login = new Date();
@@ -65,7 +57,6 @@ export const login = async (req: Request, res: Response) => {
       message: "Login successful",
       user: userPayload,
       accessToken: accessToken,
-      refreshToken: refreshToken
     });
   } catch (error) {
     console.error("Error during login:", error);
@@ -240,11 +231,6 @@ export const resetPassword = async (req: Request, res: Response) => {
 export const logout = async (req: Request, res: Response) => {
   try {
     res.clearCookie("accessToken", {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "none"
-    });
-    res.clearCookie("refreshToken", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "none"

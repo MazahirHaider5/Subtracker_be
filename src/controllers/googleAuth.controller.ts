@@ -6,7 +6,7 @@ import {
   VerifyCallback
 } from "passport-google-oauth20";
 import User from "../models/users.model";
-import { generateAccessToken, generateRefreshToken } from "../utils/jwt";
+import { generateAccessToken } from "../utils/jwt";
 
 passport.use(
   new GoogleStrategy(
@@ -35,11 +35,9 @@ passport.use(
           await user.save();
         }
         const newAccessToken = generateAccessToken(user);
-        const newRefreshToken = generateRefreshToken(user);
         done(null, {
           user,
           accessToken: newAccessToken,
-          refreshToken: newRefreshToken
         });
       } catch (error) {
         done(error, false);
@@ -69,20 +67,13 @@ export const googleCallback = (req: Request, res: Response, next: any) => {
       });
     }
 
-    const { user, accessToken, refreshToken } = data;
+    const { user, accessToken } = data;
 
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
       maxAge: 24 * 60 * 60 * 1000
-    });
-
-    res.cookie("refreshToken", refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 7 * 24 * 60 * 60 * 1000
     });
     res.redirect(`${process.env.FRONT_END_SUCCESS_URL}`);
     // Send response with tokens

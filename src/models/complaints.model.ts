@@ -22,7 +22,7 @@ const generateTicketID = (): string => {
 
 const ComplaintSchema: Schema = new Schema<IComplaint>(
   {
-    user_id: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    user_id: { type: Schema.Types.ObjectId, ref: "User", required: true, set: (id: string) => new mongoose.Types.ObjectId(id) },
     ticket_id: { type: String, unique: true, default: generateTicketID },
     issue: {
       type: String,
