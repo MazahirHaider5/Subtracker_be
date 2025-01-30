@@ -8,7 +8,8 @@ import {
   SendSetPasswordLink,
   replyToComplaint,
   activateOrDeactivateUser,
-  getInfoAboutUsers
+  getInfoAboutUsers,
+  getDataOnTimeFrame
 } from "../controllers/admin.controller";
 
 const router = Router();
@@ -22,5 +23,6 @@ router.post("/setPasswordLink", SendSetPasswordLink);
 router.post("/ticketReply", replyToComplaint);
 router.put("/activateOrDeactivate", activateOrDeactivateUser);
 router.get("/getInfoAboutUsers", getInfoAboutUsers);
+router.get("/getDataOnTimeFrame", getDataOnTimeFrame);
 
 export default router;

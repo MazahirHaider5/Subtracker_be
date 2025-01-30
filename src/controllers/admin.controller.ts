@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import Subscription from "../models/subscriptions.model";
 import crypto from "crypto";
-
+import { getStartDate } from "../utils/getStartDate";
 import { sendMail } from "../utils/sendMail";
 import User from "../models/users.model";
 import Complaint from "../models/complaints.model";
@@ -290,5 +290,38 @@ export const getInfoAboutUsers = async (req: Request, res: Response) => {
       .json({ success: true, message: { activeUsers, inactiveUsers } });
   } catch (error: any) {
     res.status(400).json({ success: false, message: error.message });
+  }
+};
+
+export const getDataOnTimeFrame = async (req: Request, res: Response) => {
+  try {
+    const timeframe =
+      typeof req.query.timeframe === "string" ? req.query.timeframe : "weekly";
+
+    const startDate = getStartDate(timeframe);
+    let groupBy, sortKey;
+
+    if (timeframe === "weekly") {
+      groupBy = { $dayOfWeek: "$createdAt" }; // 1 (Sunday) to 7 (Saturday)
+      sortKey = "_id";
+    } else if (timeframe === "monthly") {
+      groupBy = { $month: "$createdAt" }; // 1 (January) to 12 (December)
+      sortKey = "_id";
+    } else if (timeframe === "yearly") {
+      groupBy = { $year: "$createdAt" }; // Group by year (e.g., 2019, 2020, etc.)
+      sortKey = "_id";
+    } else {
+      return res.status(400).json({ error: "Invalid timeframe" });
+    }
+
+    const data = await User.aggregate([
+      { $match: { createdAt: { $gte: startDate } } },
+      { $group: { _id: groupBy, count: { $sum: 1 } } },
+      { $sort: { [sortKey]: 1 } } // Sort ascending
+    ]);
+
+    res.json({ timeframe, data });
+  } catch (error) {
+    res.status(500).json({ error: "Error fetching data", details: error });
   }
 };
