@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import User, { IUser } from "../models/users.model";
-
+import Activity from "../models/activity.model";
 import { hashPassword } from "../utils/bcrytp";
 import { sendMail } from "../utils/sendMail";
 import { uploadImageOnly } from "../config/multer";
@@ -239,6 +239,10 @@ export const updateUser = [
         user.photo = req.file.path;
       }
       await user.save();
+      await Activity.create({
+        userId: user._id,
+        activity: "profile updated"
+      });
       return res.status(200).json({
         success: true,
         message: "Updated successfully",

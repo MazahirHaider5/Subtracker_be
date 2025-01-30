@@ -1,9 +1,7 @@
 import { Request, Response } from "express";
 import { comparePassword, hashPassword } from "../utils/bcrytp";
-import {
-  generateAccessToken,
-  verifyToken
-} from "../utils/jwt";
+import Activity from "../models/activity.model";
+import { generateAccessToken, verifyToken } from "../utils/jwt";
 import User, { IUser } from "../models/users.model";
 import { sendMail } from "../utils/sendMail";
 import { generateOtp } from "../utils/otp";
@@ -32,11 +30,11 @@ export const login = async (req: Request, res: Response) => {
         .status(401)
         .json({ success: false, message: "Incorrect password" });
     }
-    if (!user.is_verified) {
-      return res
-        .status(404)
-        .json({ success: false, message: "user not verified" });
-    }
+    // if (!user.is_verified) {
+    //   return res
+    //     .status(404)
+    //     .json({ success: false, message: "user not verified" });
+    // }
     const userPayload: IUser = user.toObject();
     delete userPayload.password;
 
@@ -56,7 +54,7 @@ export const login = async (req: Request, res: Response) => {
       success: true,
       message: "Login successful",
       user: userPayload,
-      accessToken: accessToken,
+      accessToken: accessToken
     });
   } catch (error) {
     console.error("Error during login:", error);
@@ -215,7 +213,10 @@ export const resetPassword = async (req: Request, res: Response) => {
     user.otp_expiry = null;
 
     await user.save();
-
+    await Activity.create({
+      userId: user._id,
+      activity: "Password reset"
+    });
     return res
       .status(200)
       .json({ success: true, message: "Password reset successfully" });
