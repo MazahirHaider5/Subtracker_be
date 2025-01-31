@@ -215,7 +215,7 @@ export const resetPassword = async (req: Request, res: Response) => {
     await user.save();
     await Activity.create({
       userId: user._id,
-      activity: "Password reset"
+      activityType: "Password reset"
     });
     return res
       .status(200)

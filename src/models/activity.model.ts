@@ -9,7 +9,7 @@ export interface IActivity extends Document {
 const activitySchema = new Schema<IActivity>(
   {
     userId: { type: Schema.Types.ObjectId, ref: "User" },
-    activityType: { type: String }
+    activityType: { type: String, required: true }
   },
   {
     timestamps: true
