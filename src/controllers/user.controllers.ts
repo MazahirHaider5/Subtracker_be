@@ -241,7 +241,7 @@ export const updateUser = [
       await user.save();
       await Activity.create({
         userId: user._id,
-        activity: "profile updated"
+        activityType: "profile updated"
       });
       return res.status(200).json({
         success: true,
