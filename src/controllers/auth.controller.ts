@@ -15,7 +15,7 @@ export const login = async (req: Request, res: Response) => {
   }
   try {
     const user = await User.findOne({ email }).select(
-      "id name email password role domain port secret otp otp_expiry is_verified language currency is_biomatric is_two_factor is_email_notification stripe_customer_id"
+      "id name email password role domain port secret otp otp_expiry is_verified language currency is_biomatric is_two_factor is_email_notification stripe_customer_id user_type"
     );
 
     if (!user) {
@@ -30,11 +30,11 @@ export const login = async (req: Request, res: Response) => {
         .status(401)
         .json({ success: false, message: "Incorrect password" });
     }
-    // if (!user.is_verified) {
-    //   return res
-    //     .status(404)
-    //     .json({ success: false, message: "user not verified" });
-    // }
+    if (!user.is_verified) {
+      return res
+        .status(404)
+        .json({ success: false, message: "user not verified" });
+    }
     const userPayload: IUser = user.toObject();
     delete userPayload.password;
 
