@@ -5,9 +5,12 @@ export interface IUser extends Document {
   _id: string;
   googleId?: string;
   appleId?: string;
+  lastTransactionId: string;
   email: string;
   name: string;
   phone?: string;
+  purchaseDate: string;
+  credits: Number;
   password?: string;
   photo?: string;
   stripe_customer_id: string | null;
@@ -20,10 +23,12 @@ export interface IUser extends Document {
   language: string;
   currency: string;
   is_biomatric: boolean;
+  membershipName: string;
   is_two_factor: boolean;
   is_active: boolean;
   is_email_notification: boolean;
   signup_date: Date;
+  stripeCustomerId: string;
   last_login: Date;
 }
 
@@ -106,7 +111,15 @@ const UserSchema: Schema = new Schema<IUser>(
       default: null
     },
     reset_token: { type: String },
-    reset_token_expiry: { type: Date }
+    reset_token_expiry: { type: Date },
+    stripeCustomerId: { type: String },
+    membershipName: {
+      type: String,
+      default: "Free"
+    },
+    lastTransactionId: { type: String },
+    purchaseDate: { type: String },
+    credits: { type: Number, default: 1000 }
   },
   {
     timestamps: true

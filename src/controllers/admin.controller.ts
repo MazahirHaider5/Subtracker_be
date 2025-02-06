@@ -6,12 +6,16 @@ import { sendMail } from "../utils/sendMail";
 import User from "../models/users.model";
 import Complaint from "../models/complaints.model";
 
+export const getDataOfSubscribedOrNot = async (
+  req: Request,
+  res: Response
+) => {};
 export const getAllSubscriptions = async (req: Request, res: Response) => {
   try {
     const subscriptions = await Subscription.find()
       .populate({
         path: "user",
-        select: "email user_type"
+        select: "email user_type name"
       })
       .populate({
         path: "subscription_ctg",

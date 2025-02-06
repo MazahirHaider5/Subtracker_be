@@ -7,6 +7,7 @@ import dashboardRoutes from "./dashboard.routes";
 import adminRoutes from "./adminDashboard.routes";
 import complaintRoutes from "./complaint.routes";
 import activitiesRoutes from "./activties.routes";
+import appSubscription from "./appSubscription.routes";
 
 const router = Router();
 
@@ -18,5 +19,6 @@ router.use("/dashboard", dashboardRoutes);
 router.use("/admin", adminRoutes);
 router.use("/complain", complaintRoutes);
 router.use("/activities", activitiesRoutes);
+router.use("/appSubscriptions", appSubscription);
 
 export default router;
