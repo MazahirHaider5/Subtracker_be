@@ -1,0 +1,12 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const authenticate_1 = require("../middleware/authenticate");
+const subscription_controller_1 = require("../controllers/subscription.controller");
+const router = (0, express_1.Router)();
+router.post("/createSubscription", authenticate_1.verifyToken, subscription_controller_1.createSubscription);
+router.get("/mySubscriptions", authenticate_1.verifyToken, subscription_controller_1.getUserSubscription);
+router.delete("/deleteSubscription/:id", authenticate_1.verifyToken, subscription_controller_1.deleteSubscription);
+router.patch("/updateSubscription/:id", authenticate_1.verifyToken, subscription_controller_1.updateSubscription);
+router.patch("/updatePaidStatus/:id", authenticate_1.verifyToken, subscription_controller_1.updatePaidStatus);
+exports.default = router;
