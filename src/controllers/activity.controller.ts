@@ -17,3 +17,4 @@ export const getAllActivities = async (
       .json({ success: false, message: "Error fetching activities" });
   }
 };
+//
