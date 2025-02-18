@@ -1,7 +1,7 @@
 node_modules
 .vscode
 .env
-dist
+
 
 /config/AuthKey_738W8HRUV9.p8
 
