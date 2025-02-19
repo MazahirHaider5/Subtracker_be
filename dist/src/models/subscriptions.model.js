@@ -64,7 +64,7 @@ const SubscriptionSchema = new mongoose_1.Schema({
     subscription_billing_cycle: {
         type: String,
         enum: ["Monthly", "Yearly", "Weekly", "Daily"],
-        required: true,
+        required: true
     },
     subscription_price: {
         type: Number,
@@ -86,5 +86,7 @@ const SubscriptionSchema = new mongoose_1.Schema({
         type: [String],
         required: false
     }
+}, {
+    timestamps: true
 });
 exports.default = mongoose_1.default.model("Subscriptions", SubscriptionSchema);

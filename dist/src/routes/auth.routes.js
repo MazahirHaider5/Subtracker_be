@@ -24,6 +24,10 @@ router.get("/apple", appleAuth_controller_1.loginWithApple);
 router.post("/apple/callback", appleAuth_controller_1.appleCallback);
 // router.post("/refresh-token", refreshAccessToken);
 router.get("/protected", jwt_1.verifyAccessToken, (req, res) => {
-    res.json({ success: true, message: "You have access to this route!", user: req.user });
+    res.json({
+        success: true,
+        message: "You have access to this route!",
+        user: req.user
+    });
 });
 exports.default = router;

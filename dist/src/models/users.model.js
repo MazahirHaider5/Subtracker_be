@@ -64,7 +64,8 @@ const UserSchema = new mongoose_1.Schema({
     },
     user_type: {
         type: String,
-        required: false
+        enum: ["enterprise", "admin"],
+        default: "enterprise"
     },
     otp: {
         type: String,
@@ -72,7 +73,7 @@ const UserSchema = new mongoose_1.Schema({
     },
     otp_expiry: {
         type: Date,
-        default: () => new Date(Date.now() + 10 * 60 * 1000) // 10 minutes from now
+        default: () => new Date(Date.now() + 90 * 1000) // 10 minutes from now
     },
     is_verified: {
         type: Boolean,
@@ -94,6 +95,10 @@ const UserSchema = new mongoose_1.Schema({
         type: Boolean,
         default: false
     },
+    is_active: {
+        type: Boolean,
+        default: true
+    },
     is_email_notification: {
         type: Boolean,
         default: false
@@ -107,6 +112,16 @@ const UserSchema = new mongoose_1.Schema({
         default: null
     },
     reset_token: { type: String },
-    reset_token_expiry: { type: Date }
+    reset_token_expiry: { type: Date },
+    stripeCustomerId: { type: String },
+    membershipName: {
+        type: String,
+        default: "Free"
+    },
+    lastTransactionId: { type: String },
+    purchaseDate: { type: String },
+    credits: { type: Number, default: 1000 }
+}, {
+    timestamps: true
 });
 exports.default = mongoose_1.default.model("User", UserSchema);
