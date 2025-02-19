@@ -42,7 +42,8 @@ const allowedOrigins = [
     "https://appleid.apple.com",
     "http://localhost:3000",
     "http://localhost:3001",
-    "http://localhost:4000"
+    "http://localhost:4000",
+    "https://subtracker-react-hdr.vercel.app"
 ];
 app.use((0, cors_1.default)({
     origin: (origin, callback) => {
@@ -62,6 +63,7 @@ app.use(express_1.default.json());
 app.use((0, cookie_parser_1.default)());
 // app.use(rateLimit);
 app.use("/uploads", express_1.default.static(path_1.default.join(__dirname, "../uploads")));
+//
 app.get("/test", (req, res) => {
     res.status(200).json({ message: "server working" });
 });

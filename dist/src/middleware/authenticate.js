@@ -20,22 +20,14 @@ const verifyToken = (req, res, next) => {
     }
     catch (error) {
         if (error.name === "TokenExpiredError") {
-            if (req.url.includes("/refresh-token")) {
-                return res.status(401).json({
-                    success: false,
-                    message: "Refresh token expired"
-                });
-            }
-            else {
-                return res.status(401).json({
-                    success: false,
-                    message: "Access token expired"
-                });
-            }
+            return res.status(401).json({
+                success: false,
+                message: "Access token expired"
+            });
         }
         return res.status(401).json({
             success: false,
-            message: "Refresh token expired",
+            message: "Invalid token",
             error: error.message
         });
     }

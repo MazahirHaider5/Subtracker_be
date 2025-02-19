@@ -14,6 +14,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.logout = exports.resetPassword = exports.verifyOtp = exports.resendOtp = exports.requestOtp = exports.login = void 0;
 const bcrytp_1 = require("../utils/bcrytp");
+const activity_model_1 = __importDefault(require("../models/activity.model"));
 const jwt_1 = require("../utils/jwt");
 const users_model_1 = __importDefault(require("../models/users.model"));
 const sendMail_1 = require("../utils/sendMail");
@@ -27,7 +28,7 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             .json({ success: false, message: "Email and password are required" });
     }
     try {
-        const user = yield users_model_1.default.findOne({ email }).select("id name email password role domain port secret otp otp_expiry is_verified language currency is_biomatric is_two_factor is_email_notification stripe_customer_id");
+        const user = yield users_model_1.default.findOne({ email }).select("id name email password role domain port secret otp otp_expiry is_verified language currency is_biomatric is_two_factor is_email_notification stripe_customer_id user_type");
         if (!user) {
             return res
                 .status(404)
@@ -39,21 +40,19 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
                 .status(401)
                 .json({ success: false, message: "Incorrect password" });
         }
+        if (!user.is_verified) {
+            return res
+                .status(404)
+                .json({ success: false, message: "user not verified" });
+        }
         const userPayload = user.toObject();
         delete userPayload.password;
         const accessToken = (0, jwt_1.generateAccessToken)(userPayload);
-        const refreshToken = (0, jwt_1.generateRefreshToken)(userPayload);
         res.cookie("accessToken", accessToken, {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
             sameSite: "none",
             maxAge: 24 * 60 * 60 * 1000 // 1 day expiration
-        });
-        res.cookie("refreshToken", refreshToken, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: "none",
-            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days expiration
         });
         user.last_login = new Date();
         yield user.save();
@@ -61,8 +60,7 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             success: true,
             message: "Login successful",
             user: userPayload,
-            accessToken: accessToken,
-            refreshToken: refreshToken
+            accessToken: accessToken
         });
     }
     catch (error) {
@@ -121,6 +119,11 @@ const resendOtp = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             return res
                 .status(400)
                 .json({ success: false, message: "User not found" });
+        }
+        if (user.is_verified) {
+            return res
+                .status(400)
+                .json({ success: false, message: "user already verified" });
         }
         //OTP will be sent only when the previous OTP is expired
         if (user.otp_expiry && new Date() < user.otp_expiry) {
@@ -210,8 +213,11 @@ const resetPassword = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         user.password = hashedPassword;
         user.otp = null;
         user.otp_expiry = null;
-        user.is_verified = false;
         yield user.save();
+        yield activity_model_1.default.create({
+            userId: user._id,
+            activityType: "Password reset"
+        });
         return res
             .status(200)
             .json({ success: true, message: "Password reset successfully" });
@@ -227,11 +233,6 @@ exports.resetPassword = resetPassword;
 const logout = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         res.clearCookie("accessToken", {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: "none"
-        });
-        res.clearCookie("refreshToken", {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
             sameSite: "none"

@@ -37,8 +37,10 @@ passport_1.default.use(new passport_google_oauth20_1.Strategy({
             yield user.save();
         }
         const newAccessToken = (0, jwt_1.generateAccessToken)(user);
-        const newRefreshToken = (0, jwt_1.generateRefreshToken)(user);
-        done(null, { user, accessToken: newAccessToken, refreshToken: newRefreshToken });
+        done(null, {
+            user,
+            accessToken: newAccessToken,
+        });
     }
     catch (error) {
         done(error, false);
@@ -46,7 +48,7 @@ passport_1.default.use(new passport_google_oauth20_1.Strategy({
 })));
 exports.loginWithGoogle = passport_1.default.authenticate("google", {
     scope: ["profile", "email"],
-    session: false,
+    session: false
 });
 const googleCallback = (req, res, next) => {
     passport_1.default.authenticate("google", { session: false }, (err, data, info) => {
@@ -54,36 +56,24 @@ const googleCallback = (req, res, next) => {
             console.error("Google OAuth Error:", err);
             return res.status(500).json({
                 success: false,
-                message: "Authentication failed due to an internal error.",
+                message: "Authentication failed due to an internal error."
             });
         }
         if (!data) {
             return res.status(401).json({
                 success: false,
-                message: "Authentication failed. No user data returned.",
+                message: "Authentication failed. No user data returned."
             });
         }
-        const { user, accessToken, refreshToken } = data;
+        const { user, accessToken } = data;
         res.cookie("accessToken", accessToken, {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
             sameSite: "strict",
             maxAge: 24 * 60 * 60 * 1000
         });
-        res.cookie("refreshToken", refreshToken, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: "strict",
-            maxAge: 7 * 24 * 60 * 60 * 1000
-        });
+        res.redirect(`${process.env.FRONT_END_SUCCESS_URL}`);
         // Send response with tokens
-        res.status(200).json({
-            success: true,
-            message: "Login successful",
-            user,
-            accessToken,
-            refreshToken,
-        });
     })(req, res, next);
 };
 exports.googleCallback = googleCallback;

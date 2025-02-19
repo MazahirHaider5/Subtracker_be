@@ -12,30 +12,24 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateSpecificFields = exports.changeCurrency = exports.changeLanguage = exports.updateUser = exports.verifySignupOtp = exports.deleteAccount = exports.userSignup = exports.getUsers = void 0;
+exports.setPassword = exports.updateSpecificFields = exports.changeCurrency = exports.changeLanguage = exports.updateUser = exports.verifySignupOtp = exports.deleteAccount = exports.userSignup = exports.getUsers = void 0;
 const users_model_1 = __importDefault(require("../models/users.model"));
+const activity_model_1 = __importDefault(require("../models/activity.model"));
 const bcrytp_1 = require("../utils/bcrytp");
 const sendMail_1 = require("../utils/sendMail");
 const multer_1 = require("../config/multer");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-const node_cache_1 = __importDefault(require("node-cache"));
-const userCache = new node_cache_1.default({ stdTTL: 90 });
-// Helper function to get user by ID or email
-const findUser = (id, email) => __awaiter(void 0, void 0, void 0, function* () {
-    let user;
-    if (id) {
-        user = yield users_model_1.default.findById(id);
-    }
-    else if (email) {
-        user = yield users_model_1.default.findOne({ email });
-    }
-    return user;
-});
 const getUsers = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { id, email } = req.query;
+    const { id, email, user_type } = req.query;
     try {
+        if (user_type && !["enterprise", "admin"].includes(user_type)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid role provided"
+            });
+        }
         if (id || email) {
-            const user = yield findUser(id, email);
+            const user = yield users_model_1.default.findOne(Object.assign({ $or: [{ _id: id }, { email: email }] }, (user_type && { user_type }))).select("-password");
             if (!user) {
                 return res
                     .status(404)
@@ -43,8 +37,11 @@ const getUsers = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             }
             return res.status(200).json({ success: true, data: user });
         }
-        const users = yield users_model_1.default.find().select("-password");
-        if (!users || users.length === 0) {
+        const query = {};
+        if (user_type)
+            query.user_type = user_type;
+        const users = yield users_model_1.default.find(query).select("-password");
+        if (!users.length) {
             return res
                 .status(404)
                 .json({ success: false, message: "No users found" });
@@ -62,34 +59,32 @@ const getUsers = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 });
 exports.getUsers = getUsers;
 const userSignup = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { email, password } = req.body;
+    const { email, password, userName } = req.body;
     if (!email || !password) {
         return res
             .status(400)
             .json({ success: false, message: "Missing required fields" });
     }
     try {
-        const existingUser = yield users_model_1.default.findOne({ email });
+        const existingUser = yield users_model_1.default.findOne({ email: email });
         if (existingUser) {
-            return res.status(409).json({
+            return res.status(400).json({
                 success: false,
                 message: "User with this email already exists"
             });
         }
         const hashedPassword = yield (0, bcrytp_1.hashPassword)(password);
         const generatedOTP = Math.floor(1000 + Math.random() * 9000).toString();
-        // const newUser = new User({
-        //   email,
-        //   name: req.body.name || "Subtracker User",
-        //   password: hashedPassword,
-        //   user_type: "",
-        //   otp: generatedOTP,
-        //   otp_expiry: new Date(Date.now() + 90 * 1000), // 90 seconds expiry
-        //   is_verified: false
-        // });
-        userCache.set(email, {
+        const newUser = new users_model_1.default({
             email,
-            name: "Subtracker User",
+            name: userName || "Subtracker User",
+            password: hashedPassword,
+            otp: generatedOTP,
+            is_verified: false
+        });
+        const user = yield users_model_1.default.create({
+            email,
+            name: userName,
             password: hashedPassword,
             otp: generatedOTP,
             otp_expiry: new Date(Date.now() + 90 * 1000),
@@ -155,33 +150,22 @@ const verifySignupOtp = (req, res) => __awaiter(void 0, void 0, void 0, function
             .json({ success: false, message: "Email and OTP are required" });
     }
     try {
-        const cachedUser = userCache.get(email);
-        if (!cachedUser) {
-            return res
-                .status(404)
-                .json({ success: false, message: "OTP expired or invalid request" });
+        const user = yield users_model_1.default.findOne({ email: email });
+        if (!user) {
+            return res.status(404).json({ success: false, message: "user not fou" });
         }
-        if (cachedUser.otp !== otp) {
+        if ((user === null || user === void 0 ? void 0 : user.otp) !== otp) {
             return res.status(400).json({ success: false, message: "Incorrect OTP" });
         }
-        if (new Date() > new Date(cachedUser.otp_expiry)) {
+        if ((user === null || user === void 0 ? void 0 : user.otp_expiry) &&
+            new Date(user.otp_expiry) instanceof Date &&
+            new Date() > new Date(user.otp_expiry)) {
             return res
                 .status(400)
-                .json({ success: false, message: "OTP has expired" });
+                .json({ success: false, message: "otp is expired" });
         }
-        const newUser = new users_model_1.default({
-            email: cachedUser.email,
-            name: cachedUser.name,
-            password: cachedUser.password,
-            user_type: "",
-            is_verified: true,
-            signup_date: new Date(),
-        });
-        if (!cachedUser.signup_date) {
-            cachedUser.signup_date = new Date();
-        }
-        yield newUser.save();
-        userCache.del(email);
+        user.is_verified = true;
+        yield user.save();
         return res.status(200).json({
             success: true,
             message: "OTP verified successfully. You can now sign in."
@@ -228,6 +212,10 @@ exports.updateUser = [
                 user.photo = req.file.path;
             }
             yield user.save();
+            yield activity_model_1.default.create({
+                userId: user._id,
+                activityType: "profile updated"
+            });
             return res.status(200).json({
                 success: true,
                 message: "Updated successfully",
@@ -380,3 +368,36 @@ const updateSpecificFields = (req, res) => __awaiter(void 0, void 0, void 0, fun
     }
 });
 exports.updateSpecificFields = updateSpecificFields;
+const setPassword = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    const { email, password } = req.body;
+    if (!email || !password) {
+        return res
+            .status(400)
+            .json({ success: false, message: "Email and password are required" });
+    }
+    try {
+        const user = yield users_model_1.default.findOne({ email: email });
+        if (!user) {
+            return res
+                .status(404)
+                .json({ success: false, message: "user doesnot exits" });
+        }
+        if (((_a = user.password) === null || _a === void 0 ? void 0 : _a.length) == 0) {
+            return res
+                .status(400)
+                .json({ success: false, message: "Enter invited email" });
+        }
+        const hashedPassword = yield (0, bcrytp_1.hashPassword)(password);
+        user.password = hashedPassword;
+        user.is_verified = true;
+        yield user.save();
+        res
+            .status(200)
+            .json({ success: true, message: "password set succesfully" });
+    }
+    catch (error) {
+        res.status(400).json({ success: false, message: error });
+    }
+});
+exports.setPassword = setPassword;
