@@ -8,19 +8,6 @@ import jwt from "jsonwebtoken";
 import NodeCache from "node-cache";
 import { use } from "passport";
 
-const userCache = new NodeCache({ stdTTL: 90 });
-
-// Helper function to get user by ID or email
-const findUser = async (id: string | undefined, email?: string) => {
-  let user;
-  if (id) {
-    user = await User.findById(id);
-  } else if (email) {
-    user = await User.findOne({ email });
-  }
-  return user;
-};
-
 export const getUsers = async (req: Request, res: Response) => {
   const { id, email, user_type } = req.query;
   try {
@@ -69,7 +56,7 @@ export const getUsers = async (req: Request, res: Response) => {
 export const userSignup = async (req: Request, res: Response) => {
   const { email, password, userName } = req.body;
 
-  if (!email || !password || !userName) {
+  if (!email || !password) {
     return res
       .status(400)
       .json({ success: false, message: "Missing required fields" });
