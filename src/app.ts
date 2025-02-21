@@ -5,7 +5,7 @@ import cors from "cors";
 import helmet from "helmet";
 import cookieParser from "cookie-parser";
 import routes from "./routes";
-import { rateLimit } from "./middleware/rateLimiter";
+// import { rateLimit } from "./middleware/rateLimiter";
 import passport from "passport";
 import session from "express-session";
 import path from "path";
