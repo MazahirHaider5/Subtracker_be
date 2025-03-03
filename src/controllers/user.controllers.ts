@@ -5,8 +5,7 @@ import { hashPassword } from "../utils/bcrytp";
 import { sendMail } from "../utils/sendMail";
 import { uploadImageOnly } from "../config/multer";
 import jwt from "jsonwebtoken";
-import NodeCache from "node-cache";
-import { use } from "passport";
+import validator from "validator";
 
 export const getUsers = async (req: Request, res: Response) => {
   const { id, email, user_type } = req.query;
@@ -57,36 +56,34 @@ export const userSignup = async (req: Request, res: Response) => {
   const { email, password, userName } = req.body;
 
   if (!email || !password) {
-    return res
-      .status(400)
-      .json({ success: false, message: "Missing required fields" });
+    return res.status(400).json({ success: false, message: "Missing required fields" });
+  }
+
+  // Validate email format
+  if (!validator.isEmail(email)) {
+    return res.status(400).json({ success: false, message: "Invalid email format" });
   }
 
   try {
-    const existingUser = await User.findOne({ email: email });
+    const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({
         success: false,
         message: "User with this email already exists"
       });
     }
+
     const hashedPassword = await hashPassword(password);
     const generatedOTP = Math.floor(1000 + Math.random() * 9000).toString();
-    const newUser = new User({
+
+    const user = await User.create({
       email,
       name: userName || "Subtracker User",
       password: hashedPassword,
       otp: generatedOTP,
-      is_verified: false
-    });
-
-    const user = await User.create({
-      email,
-      name: userName,
-      password: hashedPassword,
-      otp: generatedOTP,
       otp_expiry: new Date(Date.now() + 90 * 1000),
-      signup_date: new Date()
+      signup_date: new Date(),
+      is_verified: false
     });
 
     const subject = "Subtrack Email Verification Mail";
@@ -97,6 +94,7 @@ export const userSignup = async (req: Request, res: Response) => {
       success: true,
       message: "OTP sent to your email. Please verify to complete registration."
     });
+
   } catch (error) {
     console.error("Error creating user:", error);
     return res.status(500).json({

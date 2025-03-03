@@ -68,85 +68,99 @@ export const login = async (req: Request, res: Response) => {
 
 export const requestOtp = async (req: Request, res: Response) => {
   const { email } = req.body;
+
   if (!email) {
-    return res
-      .status(400)
-      .json({ success: false, message: "Email is required" });
+    return res.status(400).json({ success: false, message: "Email is required" });
   }
+
   try {
     const user = await User.findOne({ email });
+
     if (!user) {
-      return res
-        .status(404)
-        .json({ success: false, message: "User not found" });
+      return res.status(404).json({ success: false, message: "User not found" });
     }
-    const otp = generateOtp();
 
-    user.otp = otp;
-    (user.otp_expiry = new Date(Date.now() + 90 * 1000)), // 90 seconds expiry
-      await user.save();
-
-    const subject = "Password Reset OTP";
-    const body = `Your OTP for password reset is: ${otp}. It will expire in 90 seconds.`;
-    await sendMail(email, subject, body);
-
-    return res
-      .status(200)
-      .json({ success: true, message: "OTP sent to email" });
-  } catch (error) {
-    console.log("Error requesting password reset: ", error);
-    return res
-      .status(500)
-      .json({ success: false, message: "Internal server error" });
-  }
-};
-
-export const resendOtp = async (req: Request, res: Response) => {
-  const { email } = req.body;
-  if (!email) {
-    return res
-      .status(400)
-      .json({ success: false, message: "Email is required" });
-  }
-  try {
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res
-        .status(400)
-        .json({ success: false, message: "User not found" });
+    if (user.otp && user.otp_expiry && new Date(user.otp_expiry) > new Date()) {
+      return res.status(429).json({
+        success: false,
+        message: `OTP already sent. Please wait before requesting a new one.`,
+      });
     }
-    if (user.is_verified) {
-      return res
-        .status(400)
-        .json({ success: false, message: "user already verified" });
-    }
-    //OTP will be sent only when the previous OTP is expired
-    if (user.otp_expiry && new Date() < user.otp_expiry) {
-      return res
-        .status(400)
-        .json({ success: false, message: "OTP is still valid" });
-    }
+
     const otp = generateOtp();
     user.otp = otp;
-    (user.otp_expiry = new Date(Date.now() + 90 * 1000)), // 90 seconds expiry
-      (user.is_verified = false);
-
+    user.otp_expiry = new Date(Date.now() + 60 * 1000); // 60 seconds expiry
     await user.save();
 
     const subject = "Password Reset OTP";
-    const body = `Your new OTP for password reset is: ${otp}. It will expire in 90 seconds.`;
+    const body = `Your OTP for password reset is: ${otp}. It will expire in 60 seconds.`;
     await sendMail(email, subject, body);
 
-    return res
-      .status(200)
-      .json({ success: true, message: "OTP resent to email" });
+    return res.status(200).json({
+      success: true,
+      message: "OTP sent successfully. Please check your email.",
+    });
+
   } catch (error) {
-    console.error("Error resending OTP:", error);
-    return res
-      .status(500)
-      .json({ success: false, message: "Internal server error" });
+    console.error("Error requesting password reset: ", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
   }
 };
+
+
+export const resendOtp = async (req: Request, res: Response) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return res.status(400).json({ success: false, message: "Email is required" });
+  }
+
+  try {
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    if (user.is_verified) {
+      return res.status(400).json({ success: false, message: "User is already verified" });
+    }
+
+    if (user.otp_expiry && new Date(user.otp_expiry) > new Date()) {
+      const remainingTime = Math.ceil((user.otp_expiry.getTime() - Date.now()) / 1000);
+      return res.status(429).json({
+        success: false,
+        message: `OTP already sent. Please wait ${remainingTime} seconds before requesting a new one.`,
+      });
+    }
+
+    const otp = generateOtp();
+    user.otp = otp;
+    user.otp_expiry = new Date(Date.now() + 60 * 1000); // 60 seconds expiry
+    user.is_verified = false;
+    await user.save();
+
+    const subject = "OTP Verification email for Subtracker";
+    const body = `Your new OTP for Account Verification is: ${otp}. It will expire in 60 seconds.`;
+    await sendMail(email, subject, body);
+
+    return res.status(200).json({
+      success: true,
+      message: "A new OTP has been sent to your email. Please check your inbox.",
+    });
+
+  } catch (error) {
+    console.error("Error resending OTP:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
 
 export const verifyOtp = async (req: Request, res: Response) => {
   const { email, otp } = req.body;
