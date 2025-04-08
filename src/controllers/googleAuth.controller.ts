@@ -71,10 +71,11 @@ export const googleCallback = (req: Request, res: Response, next: any) => {
 
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      secure: process.env.NODE_ENV === "production", // only true in production
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // 'none' for cross-origin; 'lax' is okay for dev
       maxAge: 24 * 60 * 60 * 1000
     });
+    
     res.redirect(`${process.env.FRONT_END_SUCCESS_URL}`);
     // Send response with tokens
   })(req, res, next);
