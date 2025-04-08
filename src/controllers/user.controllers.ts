@@ -437,3 +437,39 @@ export const setPassword = async (req: Request, res: Response) => {
     res.status(400).json({ success: false, message: error });
   }
 };
+
+export const getUserDetails = async (req: Request, res: Response) => {
+  try {
+    const token = req.cookies.accessToken || (req.headers.authorization && req.headers.authorization.split(" ")[1]);
+
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized, no token provided"
+      });
+    }
+    const decodedToken = jwt.verify(token, process.env.JWT_SECRET!) as {id: string};
+    const userId = decodedToken.id;
+    const user = await User.findById(userId).select("-password");
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+    return res.status(200).json({
+      success: false,
+      data: user
+    });
+    
+  } catch (error) {
+    console.error("Error fetching user details:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error while fetching user details",
+      error: (error as Error).message
+    });
+    
+  }
+};
