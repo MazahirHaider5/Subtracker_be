@@ -17,6 +17,21 @@ const PORT = process.env.PORT;
 dotenv.config();
 const app = express();
 
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+    methods: "GET,POST,PUT,DELETE,OPTIONS,PATCH",
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
+
 app.use(passport.initialize());
 
 app.use(
@@ -37,28 +52,15 @@ app.use(helmet());
 // CORS configuration
 const allowedOrigins = [
   "https://subtracker-be.onrender.com",
-  "https://appleid.apple.com",
   "http://localhost:3000",
   "http://localhost:3001",
   "http://localhost:4000",
-  "https://subtracker-react-hdr.vercel.app"
+  "https://subtracker-react-hdr.vercel.app",
+  "https://subtracker-dashboard-hdr.vercel.app",
 ];
 
 
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
-    credentials: true, // Allow credentials (cookies)
-    methods: "GET,POST,PUT,DELETE,OPTIONS,PATCH",
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
+
 
 // Middleware
 app.use(express.json());
