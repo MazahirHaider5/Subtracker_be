@@ -50,9 +50,9 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         const accessToken = (0, jwt_1.generateAccessToken)(userPayload);
         res.cookie("accessToken", accessToken, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: "none",
-            maxAge: 24 * 60 * 60 * 1000 // 1 day expiration
+            secure: process.env.NODE_ENV === "production", // only true in production
+            sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // 'none' for cross-origin; 'lax' is okay for dev
+            maxAge: 24 * 60 * 60 * 1000
         });
         user.last_login = new Date();
         yield user.save();

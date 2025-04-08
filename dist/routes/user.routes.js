@@ -5,6 +5,7 @@ const authenticate_1 = require("../middleware/authenticate");
 const user_controllers_1 = require("../controllers/user.controllers");
 const router = (0, express_1.Router)();
 router.get("/allUsers", user_controllers_1.getUsers);
+router.get("/getUserDetails", user_controllers_1.getUserDetails);
 router.patch("/updateUser", authenticate_1.verifyToken, user_controllers_1.updateUser);
 router.patch("/updateSpecificDetails", authenticate_1.verifyToken, user_controllers_1.updateSpecificFields);
 router.patch("/changeLanguage", authenticate_1.verifyToken, user_controllers_1.changeLanguage);
