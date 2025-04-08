@@ -7,12 +7,14 @@ import {
   getUsers,
   updateSpecificFields,
   updateUser,
-  setPassword
+  setPassword,
+  getUserDetails
 } from "../controllers/user.controllers";
 
 const router = Router();
 
 router.get("/allUsers", getUsers);
+router.get("/getUserDetails", getUserDetails);
 
 router.patch("/updateUser", verifyToken, updateUser);
 
