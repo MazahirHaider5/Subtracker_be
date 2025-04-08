@@ -19,6 +19,7 @@ const bcrytp_1 = require("../utils/bcrytp");
 const sendMail_1 = require("../utils/sendMail");
 const multer_1 = require("../config/multer");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+const validator_1 = __importDefault(require("validator"));
 const getUsers = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id, email, user_type } = req.query;
     try {
@@ -61,12 +62,14 @@ exports.getUsers = getUsers;
 const userSignup = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { email, password, userName } = req.body;
     if (!email || !password) {
-        return res
-            .status(400)
-            .json({ success: false, message: "Missing required fields" });
+        return res.status(400).json({ success: false, message: "Missing required fields" });
+    }
+    // Validate email format
+    if (!validator_1.default.isEmail(email)) {
+        return res.status(400).json({ success: false, message: "Invalid email format" });
     }
     try {
-        const existingUser = yield users_model_1.default.findOne({ email: email });
+        const existingUser = yield users_model_1.default.findOne({ email });
         if (existingUser) {
             return res.status(400).json({
                 success: false,
@@ -75,20 +78,14 @@ const userSignup = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         }
         const hashedPassword = yield (0, bcrytp_1.hashPassword)(password);
         const generatedOTP = Math.floor(1000 + Math.random() * 9000).toString();
-        const newUser = new users_model_1.default({
+        const user = yield users_model_1.default.create({
             email,
             name: userName || "Subtracker User",
             password: hashedPassword,
             otp: generatedOTP,
-            is_verified: false
-        });
-        const user = yield users_model_1.default.create({
-            email,
-            name: userName,
-            password: hashedPassword,
-            otp: generatedOTP,
             otp_expiry: new Date(Date.now() + 90 * 1000),
-            signup_date: new Date()
+            signup_date: new Date(),
+            is_verified: false
         });
         const subject = "Subtrack Email Verification Mail";
         const body = `Your OTP is ${generatedOTP}. It will expire in 90 seconds.`;
