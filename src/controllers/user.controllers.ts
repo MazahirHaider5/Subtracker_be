@@ -472,4 +472,4 @@ export const getUserDetails = async (req: Request, res: Response) => {
     });
     
   }
-};
+};    

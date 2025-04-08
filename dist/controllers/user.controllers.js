@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.setPassword = exports.updateSpecificFields = exports.changeCurrency = exports.changeLanguage = exports.updateUser = exports.verifySignupOtp = exports.deleteAccount = exports.userSignup = exports.getUsers = void 0;
+exports.getUserDetails = exports.setPassword = exports.updateSpecificFields = exports.changeCurrency = exports.changeLanguage = exports.updateUser = exports.verifySignupOtp = exports.deleteAccount = exports.userSignup = exports.getUsers = void 0;
 const users_model_1 = __importDefault(require("../models/users.model"));
 const activity_model_1 = __importDefault(require("../models/activity.model"));
 const bcrytp_1 = require("../utils/bcrytp");
@@ -398,3 +398,36 @@ const setPassword = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     }
 });
 exports.setPassword = setPassword;
+const getUserDetails = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const token = req.cookies.accessToken || (req.headers.authorization && req.headers.authorization.split(" ")[1]);
+        if (!token) {
+            return res.status(401).json({
+                success: false,
+                message: "Unauthorized, no token provided"
+            });
+        }
+        const decodedToken = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET);
+        const userId = decodedToken.id;
+        const user = yield users_model_1.default.findById(userId).select("-password");
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found"
+            });
+        }
+        return res.status(200).json({
+            success: false,
+            data: user
+        });
+    }
+    catch (error) {
+        console.error("Error fetching user details:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error while fetching user details",
+            error: error.message
+        });
+    }
+});
+exports.getUserDetails = getUserDetails;
