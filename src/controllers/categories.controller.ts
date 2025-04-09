@@ -31,7 +31,7 @@ export const createCategory = async (req: Request, res: Response) => {
     if (existingCategory) {
       return res.status(400).json({
         success: false,
-        message: "Category already available with this name, use a different name"
+        message: "Category already exists with this name, use a different name"
       });
     }
     const newCategory = new Category({

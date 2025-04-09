@@ -80,6 +80,8 @@ export const userSignup = async (req: Request, res: Response) => {
       email,
       name: userName || "Subtracker User",
       password: hashedPassword,
+      phone: "",
+      photo: "https://ui-avatars.com/api/?name=Subtracker+User&background=random",
       otp: generatedOTP,
       otp_expiry: new Date(Date.now() + 90 * 1000),
       signup_date: new Date(),
@@ -450,7 +452,7 @@ export const getUserDetails = async (req: Request, res: Response) => {
     }
     const decodedToken = jwt.verify(token, process.env.JWT_SECRET!) as {id: string};
     const userId = decodedToken.id;
-    const user = await User.findById(userId).select("-password");
+    const user = await User.findById(userId).select("-password -otp -otp_expiry -reset_token -reset_token_expiry");
 
     if (!user) {
       return res.status(404).json({
@@ -459,7 +461,7 @@ export const getUserDetails = async (req: Request, res: Response) => {
       });
     }
     return res.status(200).json({
-      success: false,
+      success: true,
       data: user
     });
     
@@ -470,6 +472,5 @@ export const getUserDetails = async (req: Request, res: Response) => {
       message: "Internal server error while fetching user details",
       error: (error as Error).message
     });
-    
   }
 };    

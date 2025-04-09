@@ -36,7 +36,15 @@ export const createSubscription = [
         subscription_price,
         subscription_reminder
       } = req.body;
-      const category = await Category.findById(subscription_ctg);
+
+      // First try to find category by ID, if that fails try by name
+      let category;
+      if (Types.ObjectId.isValid(subscription_ctg)) {
+        category = await Category.findById(subscription_ctg);
+      } else {
+        category = await Category.findOne({ category_name: subscription_ctg });
+      }
+
       if (!category) {
         return res.status(404).json({
           success: false,

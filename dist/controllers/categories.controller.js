@@ -41,7 +41,7 @@ const createCategory = (req, res) => __awaiter(void 0, void 0, void 0, function*
         if (existingCategory) {
             return res.status(400).json({
                 success: false,
-                message: "Category already available with this name, use a different name"
+                message: "Category already exists with this name, use a different name"
             });
         }
         const newCategory = new categories_model_1.default({
