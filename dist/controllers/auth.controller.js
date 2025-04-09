@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.logout = exports.resetPassword = exports.verifyOtp = exports.resendOtp = exports.requestOtp = exports.login = void 0;
+exports.socialLogin = exports.logout = exports.resetPassword = exports.verifyOtp = exports.resendOtp = exports.requestOtp = exports.login = void 0;
 const bcrytp_1 = require("../utils/bcrytp");
 const activity_model_1 = __importDefault(require("../models/activity.model"));
 const jwt_1 = require("../utils/jwt");
@@ -257,3 +257,59 @@ const logout = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 exports.logout = logout;
+const socialLogin = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { name, email, photo, provider } = req.body;
+    if (!email || !provider) {
+        return res
+            .status(400)
+            .json({ success: false, message: "Email and provider are required" });
+    }
+    try {
+        let user = yield users_model_1.default.findOne({ email });
+        if (!user) {
+            user = new users_model_1.default({
+                name,
+                email,
+                photo: photo || undefined,
+                googleId: provider === "google" ? req.body.googleId : undefined,
+                signup_date: new Date(),
+                last_login: new Date(),
+                is_verified: true,
+                is_active: true,
+            });
+            yield user.save();
+        }
+        else {
+            user.last_login = new Date();
+            yield user.save();
+        }
+        const userPayload = user.toObject();
+        delete userPayload.password;
+        delete userPayload.otp;
+        delete userPayload.otp_expiry;
+        delete userPayload.reset_token;
+        delete userPayload.reset_token_expiry;
+        const accessToken = (0, jwt_1.generateAccessToken)(userPayload);
+        res.cookie("accessToken", accessToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+            maxAge: 24 * 60 * 60 * 1000,
+        });
+        return res.status(200).json({
+            success: true,
+            message: "Social login successful",
+            user: userPayload,
+            accessToken: accessToken,
+        });
+    }
+    catch (error) {
+        console.error("Error during social login:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error",
+            error: error.message,
+        });
+    }
+});
+exports.socialLogin = socialLogin;

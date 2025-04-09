@@ -27,7 +27,7 @@ const createCategory = (req, res) => __awaiter(void 0, void 0, void 0, function*
         }
         const decodedToken = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET);
         const userId = decodedToken.id;
-        const { category_name, category_desc, category_budget } = req.body;
+        const { category_name, category_desc, category_budget, category_image } = req.body;
         if (!category_name || !category_budget) {
             return res.status(400).json({
                 success: false,
@@ -36,12 +36,12 @@ const createCategory = (req, res) => __awaiter(void 0, void 0, void 0, function*
         }
         const existingCategory = yield categories_model_1.default.findOne({
             user: userId,
-            category_name
+            category_name: { $regex: new RegExp(`^${category_name}$`, 'i') }
         });
         if (existingCategory) {
             return res.status(400).json({
                 success: false,
-                message: "Category already exists with this name, use a different name"
+                message: "You already have a category with this name, please use a different name"
             });
         }
         const newCategory = new categories_model_1.default({
@@ -49,6 +49,7 @@ const createCategory = (req, res) => __awaiter(void 0, void 0, void 0, function*
             category_name,
             category_desc: category_desc || "",
             category_budget,
+            category_image: category_image || "",
             monthly_data: {}
         });
         yield newCategory.save();

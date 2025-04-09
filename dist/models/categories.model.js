@@ -58,6 +58,10 @@ const CategorySchema = new mongoose_1.Schema({
     category_desc: {
         type: String
     },
+    category_image: {
+        type: String,
+        default: ""
+    },
     category_budget: {
         type: Number,
         default: 0

@@ -14,6 +14,7 @@ router.post("/signUp", user_controllers_1.userSignup);
 router.post("/verifyOtp", user_controllers_1.verifySignupOtp);
 router.post("/login", auth_controller_1.login);
 router.post("/logout", auth_controller_1.logout);
+router.post("/social-login", auth_controller_1.socialLogin);
 router.post("/requestOtp", auth_controller_1.requestOtp);
 router.post("/resendOtp", auth_controller_1.resendOtp);
 router.post("/verifyOtp", auth_controller_1.verifyOtp);
@@ -22,7 +23,6 @@ router.get("/google", googleAuth_controller_1.loginWithGoogle);
 router.get("/google/callback", googleAuth_controller_1.googleCallback);
 router.get("/apple", appleAuth_controller_1.loginWithApple);
 router.post("/apple/callback", appleAuth_controller_1.appleCallback);
-// router.post("/refresh-token", refreshAccessToken);
 router.get("/protected", jwt_1.verifyAccessToken, (req, res) => {
     res.json({
         success: true,
