@@ -28,7 +28,7 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             .json({ success: false, message: "Email and password are required" });
     }
     try {
-        const user = yield users_model_1.default.findOne({ email }).select("id name email password role domain port secret otp otp_expiry is_verified language currency is_biomatric is_two_factor is_email_notification stripe_customer_id user_type");
+        const user = yield users_model_1.default.findOne({ email }).select("id name email password photo phone language currency is_biomatric is_two_factor is_email_notification stripe_customer_id user_type is_verified is_active signup_date last_login");
         if (!user) {
             return res
                 .status(404)
@@ -47,6 +47,10 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         }
         const userPayload = user.toObject();
         delete userPayload.password;
+        delete userPayload.otp;
+        delete userPayload.otp_expiry;
+        delete userPayload.reset_token;
+        delete userPayload.reset_token_expiry;
         const accessToken = (0, jwt_1.generateAccessToken)(userPayload);
         res.cookie("accessToken", accessToken, {
             httpOnly: true,

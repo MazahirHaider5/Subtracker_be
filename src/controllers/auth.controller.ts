@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { comparePassword, hashPassword } from "../utils/bcrytp";
 import Activity from "../models/activity.model";
-import { generateAccessToken, verifyToken } from "../utils/jwt";
+import { generateAccessToken } from "../utils/jwt";
 import User, { IUser } from "../models/users.model";
 import { sendMail } from "../utils/sendMail";
 import { generateOtp } from "../utils/otp";
@@ -15,7 +15,7 @@ export const login = async (req: Request, res: Response) => {
   }
   try {
     const user = await User.findOne({ email }).select(
-      "id name email password role domain port secret otp otp_expiry is_verified language currency is_biomatric is_two_factor is_email_notification stripe_customer_id user_type"
+      "id name email password photo phone language currency is_biomatric is_two_factor is_email_notification stripe_customer_id user_type is_verified is_active signup_date last_login"
     );
 
     if (!user) {
@@ -37,6 +37,10 @@ export const login = async (req: Request, res: Response) => {
     }
     const userPayload: IUser = user.toObject();
     delete userPayload.password;
+    delete userPayload.otp;
+    delete userPayload.otp_expiry;
+    delete userPayload.reset_token;
+    delete userPayload.reset_token_expiry;
 
     const accessToken = generateAccessToken(userPayload);
 

@@ -37,7 +37,14 @@ exports.createSubscription = [
             const decodedToken = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET);
             const userId = decodedToken.id;
             const { subscription_name, subscription_ctg, subscription_desc, subscription_start, subscription_end, subscription_billing_cycle, subscription_price, subscription_reminder } = req.body;
-            const category = yield categories_model_1.default.findById(subscription_ctg);
+            // First try to find category by ID, if that fails try by name
+            let category;
+            if (mongoose_1.Types.ObjectId.isValid(subscription_ctg)) {
+                category = yield categories_model_1.default.findById(subscription_ctg);
+            }
+            else {
+                category = yield categories_model_1.default.findOne({ category_name: subscription_ctg });
+            }
             if (!category) {
                 return res.status(404).json({
                     success: false,

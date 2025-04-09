@@ -82,6 +82,8 @@ const userSignup = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             email,
             name: userName || "Subtracker User",
             password: hashedPassword,
+            phone: "",
+            photo: "https://ui-avatars.com/api/?name=Subtracker+User&background=random",
             otp: generatedOTP,
             otp_expiry: new Date(Date.now() + 90 * 1000),
             signup_date: new Date(),
@@ -409,7 +411,7 @@ const getUserDetails = (req, res) => __awaiter(void 0, void 0, void 0, function*
         }
         const decodedToken = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET);
         const userId = decodedToken.id;
-        const user = yield users_model_1.default.findById(userId).select("-password");
+        const user = yield users_model_1.default.findById(userId).select("-password -otp -otp_expiry -reset_token -reset_token_expiry");
         if (!user) {
             return res.status(404).json({
                 success: false,
@@ -417,7 +419,7 @@ const getUserDetails = (req, res) => __awaiter(void 0, void 0, void 0, function*
             });
         }
         return res.status(200).json({
-            success: false,
+            success: true,
             data: user
         });
     }
