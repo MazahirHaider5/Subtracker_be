@@ -8,12 +8,16 @@ import {
 import User from "../models/users.model";
 import { generateAccessToken } from "../utils/jwt";
 
+const callbackURL = process.env.NODE_ENV === "production" 
+  ? `${process.env.BACKEND_URL}/auth/google/callback`
+  : "http://localhost:3000/auth/google/callback";
+
 passport.use(
   new GoogleStrategy(
     {
       clientID: process.env.GOOGLE_CLIENT_ID as string,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
-      callbackURL: "http://localhost:3000/auth/google/callback"
+      callbackURL
     },
     async (
       accessToken: string,
@@ -29,9 +33,14 @@ passport.use(
             email: profile.emails?.[0].value,
             name: profile.displayName || "Anonymous User",
             photo: profile.photos?.[0].value || "",
-            user_type: "individual",
-            is_verified: true
+            user_type: "enterprise",
+            is_verified: true,
+            signup_date: new Date(),
+            last_login: new Date()
           });
+          await user.save();
+        } else {
+          user.last_login = new Date();
           await user.save();
         }
         const newAccessToken = generateAccessToken(user);
@@ -71,13 +80,18 @@ export const googleCallback = (req: Request, res: Response, next: any) => {
 
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production", // only true in production
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // 'none' for cross-origin; 'lax' is okay for dev
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       maxAge: 24 * 60 * 60 * 1000
     });
     
-    res.redirect(`${process.env.FRONT_END_SUCCESS_URL}`);
-    // Send response with tokens
+    // Send response with user data and token
+    return res.status(200).json({
+      success: true,
+      message: "Google login successful",
+      user,
+      accessToken
+    });
   })(req, res, next);
 };
 

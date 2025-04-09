@@ -17,7 +17,7 @@ export const createCategory = async (req: Request, res: Response) => {
       id: string;
     };
     const userId = decodedToken.id;
-    const { category_name, category_desc, category_budget } = req.body;
+    const { category_name, category_desc, category_budget, category_image } = req.body;
     if (!category_name || !category_budget) {
       return res.status(400).json({
         success: false,
@@ -26,12 +26,12 @@ export const createCategory = async (req: Request, res: Response) => {
     }
     const existingCategory = await Category.findOne({
       user: userId,
-      category_name
+      category_name: { $regex: new RegExp(`^${category_name}$`, 'i') }
     });
     if (existingCategory) {
       return res.status(400).json({
         success: false,
-        message: "Category already exists with this name, use a different name"
+        message: "You already have a category with this name, please use a different name"
       });
     }
     const newCategory = new Category({
@@ -39,6 +39,7 @@ export const createCategory = async (req: Request, res: Response) => {
       category_name,
       category_desc: category_desc || "",
       category_budget,
+      category_image: category_image || "",
       monthly_data: {}
     });
     await newCategory.save();

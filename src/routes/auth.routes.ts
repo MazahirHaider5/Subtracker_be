@@ -5,6 +5,7 @@ import {
   requestOtp,
   resendOtp,
   resetPassword,
+  socialLogin,
   verifyOtp
 } from "../controllers/auth.controller";
 import {
@@ -27,6 +28,9 @@ router.post("/verifyOtp", verifySignupOtp);
 router.post("/login", login);
 router.post("/logout", logout);
 
+router.post("/social-login", socialLogin);
+
+
 router.post("/requestOtp", requestOtp);
 router.post("/resendOtp", resendOtp);
 router.post("/verifyOtp", verifyOtp);
@@ -38,7 +42,6 @@ router.get("/google/callback", googleCallback);
 router.get("/apple", loginWithApple);
 router.post("/apple/callback", appleCallback);
 
-// router.post("/refresh-token", refreshAccessToken);
 
 router.get("/protected", verifyAccessToken, (req, res) => {
   res.json({
