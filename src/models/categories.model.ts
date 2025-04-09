@@ -7,6 +7,7 @@ export interface ICategory extends Document {
   subscriptions: ISubscriptions[];
   category_name: string;
   category_desc: string;
+  category_image: string;
   category_budget: number;
   active_subscriptions: number;
   total_budget: number;
@@ -44,6 +45,10 @@ const CategorySchema: Schema<ICategory> = new Schema(
     },
     category_desc: {
       type: String
+    },
+    category_image: {
+      type: String,
+      default: ""
     },
     category_budget: {
       type: Number,
