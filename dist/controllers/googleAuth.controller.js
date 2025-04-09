@@ -17,10 +17,13 @@ const passport_1 = __importDefault(require("passport"));
 const passport_google_oauth20_1 = require("passport-google-oauth20");
 const users_model_1 = __importDefault(require("../models/users.model"));
 const jwt_1 = require("../utils/jwt");
+const callbackURL = process.env.NODE_ENV === "production"
+    ? `${process.env.BACKEND_URL}/auth/google/callback`
+    : "http://localhost:3000/auth/google/callback";
 passport_1.default.use(new passport_google_oauth20_1.Strategy({
     clientID: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: "http://localhost:3000/auth/google/callback"
+    callbackURL
 }, (accessToken, refreshToken, profile, done) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b, _c;
     try {
@@ -31,9 +34,15 @@ passport_1.default.use(new passport_google_oauth20_1.Strategy({
                 email: (_b = profile.emails) === null || _b === void 0 ? void 0 : _b[0].value,
                 name: profile.displayName || "Anonymous User",
                 photo: ((_c = profile.photos) === null || _c === void 0 ? void 0 : _c[0].value) || "",
-                user_type: "individual",
-                is_verified: true
+                user_type: "enterprise",
+                is_verified: true,
+                signup_date: new Date(),
+                last_login: new Date()
             });
+            yield user.save();
+        }
+        else {
+            user.last_login = new Date();
             yield user.save();
         }
         const newAccessToken = (0, jwt_1.generateAccessToken)(user);
@@ -68,12 +77,17 @@ const googleCallback = (req, res, next) => {
         const { user, accessToken } = data;
         res.cookie("accessToken", accessToken, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === "production", // only true in production
-            sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // 'none' for cross-origin; 'lax' is okay for dev
+            secure: process.env.NODE_ENV === "production",
+            sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
             maxAge: 24 * 60 * 60 * 1000
         });
-        res.redirect(`${process.env.FRONT_END_SUCCESS_URL}`);
-        // Send response with tokens
+        // Send response with user data and token
+        return res.status(200).json({
+            success: true,
+            message: "Google login successful",
+            user,
+            accessToken
+        });
     })(req, res, next);
 };
 exports.googleCallback = googleCallback;
