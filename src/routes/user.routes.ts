@@ -8,7 +8,8 @@ import {
   updateSpecificFields,
   updateUser,
   setPassword,
-  getUserDetails
+  getUserDetails,
+  
 } from "../controllers/user.controllers";
 
 const router = Router();
@@ -24,5 +25,7 @@ router.patch("/changeCurrency", verifyToken, changeCurrency);
 router.post("/setPassword", setPassword);
 
 router.delete("/deleteAccount", verifyToken, deleteAccount);
+
+// router.post("/changePassword", changePassword);
 
 export default router;

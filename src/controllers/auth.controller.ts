@@ -15,7 +15,7 @@ export const login = async (req: Request, res: Response) => {
   }
   try {
     const user = await User.findOne({ email }).select(
-      "id name email password photo phone language currency is_biomatric is_two_factor is_email_notification stripe_customer_id user_type is_verified is_active signup_date last_login"
+      "id name email password photo phone language currency is_biomatric is_face_auth is_two_factor is_email_notification stripe_customer_id user_type is_verified is_active signup_date last_login"
     );
 
     if (!user) {

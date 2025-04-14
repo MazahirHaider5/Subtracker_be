@@ -28,7 +28,7 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             .json({ success: false, message: "Email and password are required" });
     }
     try {
-        const user = yield users_model_1.default.findOne({ email }).select("id name email password photo phone language currency is_biomatric is_two_factor is_email_notification stripe_customer_id user_type is_verified is_active signup_date last_login");
+        const user = yield users_model_1.default.findOne({ email }).select("id name email password photo phone language currency is_biomatric is_face_auth is_two_factor is_email_notification stripe_customer_id user_type is_verified is_active signup_date last_login");
         if (!user) {
             return res
                 .status(404)

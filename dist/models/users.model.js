@@ -91,6 +91,10 @@ const UserSchema = new mongoose_1.Schema({
         type: Boolean,
         default: false
     },
+    is_face_auth: {
+        type: Boolean,
+        default: false
+    },
     is_two_factor: {
         type: Boolean,
         default: false
