@@ -12,5 +12,5 @@ router.patch("/changeLanguage", authenticate_1.verifyToken, user_controllers_1.c
 router.patch("/changeCurrency", authenticate_1.verifyToken, user_controllers_1.changeCurrency);
 router.post("/setPassword", user_controllers_1.setPassword);
 router.delete("/deleteAccount", authenticate_1.verifyToken, user_controllers_1.deleteAccount);
-// router.post("/changePassword", changePassword);
+router.post("/changePassword", user_controllers_1.changePassword);
 exports.default = router;
