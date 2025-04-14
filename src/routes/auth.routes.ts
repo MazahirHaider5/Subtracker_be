@@ -12,9 +12,8 @@ import {
   googleCallback,
   loginWithGoogle
 } from "../controllers/googleAuth.controller";
-import { verifyToken } from "../middleware/authenticate";
 import { verifyAccessToken } from "../utils/jwt";
-import { userSignup, verifySignupOtp } from "../controllers/user.controllers";
+import { verifySignupOtp } from "../controllers/user.controllers";
 import {
   appleCallback,
   loginWithApple
@@ -22,7 +21,6 @@ import {
 
 const router = express.Router();
 
-router.post("/signUp", userSignup);
 router.post("/verifyOtp", verifySignupOtp);
 
 router.post("/login", login);

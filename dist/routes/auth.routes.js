@@ -10,7 +10,6 @@ const jwt_1 = require("../utils/jwt");
 const user_controllers_1 = require("../controllers/user.controllers");
 const appleAuth_controller_1 = require("../controllers/appleAuth.controller");
 const router = express_1.default.Router();
-router.post("/signUp", user_controllers_1.userSignup);
 router.post("/verifyOtp", user_controllers_1.verifySignupOtp);
 router.post("/login", auth_controller_1.login);
 router.post("/logout", auth_controller_1.logout);

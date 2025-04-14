@@ -23,6 +23,7 @@ export interface IUser extends Document {
   language: string;
   currency: string;
   is_biomatric: boolean;
+  is_face_auth: boolean;
   membershipName: string;
   is_two_factor: boolean;
   is_active: boolean;
@@ -87,6 +88,10 @@ const UserSchema: Schema = new Schema<IUser>(
       default: "US"
     },
     is_biomatric: {
+      type: Boolean,
+      default: false
+    },
+    is_face_auth: {
       type: Boolean,
       default: false
     },

@@ -1,11 +1,9 @@
 import { Request, Response } from "express";
 import User, { IUser } from "../models/users.model";
 import Activity from "../models/activity.model";
-import { hashPassword } from "../utils/bcrytp";
-import { sendMail } from "../utils/sendMail";
+import { hashPassword, comparePassword } from "../utils/bcrytp";
 import { uploadImageOnly } from "../config/multer";
 import jwt from "jsonwebtoken";
-import validator from "validator";
 
 export const getUsers = async (req: Request, res: Response) => {
   const { id, email, user_type } = req.query;
@@ -47,61 +45,6 @@ export const getUsers = async (req: Request, res: Response) => {
     return res.status(500).json({
       success: false,
       message: "Error occurred while fetching users",
-      error: (error as Error).message
-    });
-  }
-};
-
-export const userSignup = async (req: Request, res: Response) => {
-  const { email, password, userName } = req.body;
-
-  if (!email || !password) {
-    return res.status(400).json({ success: false, message: "Missing required fields" });
-  }
-
-  // Validate email format
-  if (!validator.isEmail(email)) {
-    return res.status(400).json({ success: false, message: "Invalid email format" });
-  }
-
-  try {
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({
-        success: false,
-        message: "User with this email already exists"
-      });
-    }
-
-    const hashedPassword = await hashPassword(password);
-    const generatedOTP = Math.floor(1000 + Math.random() * 9000).toString();
-
-    const user = await User.create({
-      email,
-      name: userName || "Subtracker User",
-      password: hashedPassword,
-      phone: "",
-      photo: "https://ui-avatars.com/api/?name=Subtracker+User&background=random",
-      otp: generatedOTP,
-      otp_expiry: new Date(Date.now() + 90 * 1000),
-      signup_date: new Date(),
-      is_verified: false
-    });
-
-    const subject = "Subtrack Email Verification Mail";
-    const body = `Your OTP is ${generatedOTP}. It will expire in 90 seconds.`;
-    await sendMail(email, subject, body);
-
-    return res.status(201).json({
-      success: true,
-      message: "OTP sent to your email. Please verify to complete registration."
-    });
-
-  } catch (error) {
-    console.error("Error creating user:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Error occurred while creating the user",
       error: (error as Error).message
     });
   }
@@ -362,8 +305,9 @@ export const updateSpecificFields = async (req: Request, res: Response) => {
       language,
       currency,
       is_biomatric,
+      is_face_auth,
       is_two_factor,
-      is_email_notification
+      is_email_notification,
     } = req.body;
     const updateFields: {
       [key: string]: any;
@@ -377,6 +321,8 @@ export const updateSpecificFields = async (req: Request, res: Response) => {
       updateFields.is_two_factor = is_two_factor;
     if (typeof is_email_notification == "boolean")
       updateFields.is_email_notification = is_email_notification;
+    if (typeof is_face_auth == "boolean")
+      updateFields.is_face_auth = is_face_auth;
 
     if (Object.keys(updateFields).length == 0) {
       return res.status(400).json({
@@ -474,3 +420,4 @@ export const getUserDetails = async (req: Request, res: Response) => {
     });
   }
 };    
+
