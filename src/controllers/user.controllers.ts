@@ -421,3 +421,63 @@ export const getUserDetails = async (req: Request, res: Response) => {
   }
 };    
 
+export const changePassword = async (req: Request, res: Response) => {
+  const { oldPassword, newPassword } = req.body;
+
+  if (!oldPassword || !newPassword) {
+    return res.status(400).json({
+      success: false,
+      message: "Missing required fields",
+    });
+  }
+  try {
+    const token = req.cookies.accessToken || (req.headers.authorization && req.headers.authorization.split(" ")[1]);
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        message: "Token not provided"
+      });
+    }
+    const decodedToken = jwt.verify(token, process.env.JWT_SECRET!) as { id: string };
+    const userId = decodedToken.id;
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+    
+    if (!user.password) {
+      return res.status(400).json({
+        success: false,
+        message: "Password not set for this user"
+      });
+    }
+
+    const isMatch = await comparePassword(oldPassword, user.password);
+    if (!isMatch) {
+      return res.status(400).json({
+        success: false,
+        message: "Old password is incorrect"
+      });
+    }
+    
+    const newHashedPassword = await hashPassword(newPassword);
+    user.password = newHashedPassword;
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Password changed successfully"
+    });
+  } catch (error) {
+    console.error("Error changing password:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error while changing the password",
+      error: (error as Error).message
+    });
+  }
+};
