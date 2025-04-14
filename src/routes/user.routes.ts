@@ -9,7 +9,7 @@ import {
   updateUser,
   setPassword,
   getUserDetails,
-  
+  changePassword
 } from "../controllers/user.controllers";
 
 const router = Router();
@@ -26,6 +26,6 @@ router.post("/setPassword", setPassword);
 
 router.delete("/deleteAccount", verifyToken, deleteAccount);
 
-// router.post("/changePassword", changePassword);
+router.post("/changePassword", changePassword);
 
 export default router;
