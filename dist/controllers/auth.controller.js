@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.socialLogin = exports.logout = exports.resetPassword = exports.verifyOtp = exports.resendOtp = exports.requestOtp = exports.login = void 0;
+exports.signup = exports.socialLogin = exports.logout = exports.resetPassword = exports.verifyOtp = exports.resendOtp = exports.requestOtp = exports.verifySignupOtp = exports.login = void 0;
 const bcrytp_1 = require("../utils/bcrytp");
 const activity_model_1 = __importDefault(require("../models/activity.model"));
 const jwt_1 = require("../utils/jwt");
@@ -77,6 +77,44 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 exports.login = login;
+const verifySignupOtp = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { email, otp } = req.body;
+    if (!email || !otp) {
+        return res
+            .status(400)
+            .json({ success: false, message: "Email and OTP are required" });
+    }
+    try {
+        const user = yield users_model_1.default.findOne({ email: email });
+        if (!user) {
+            return res.status(404).json({ success: false, message: "user not found" });
+        }
+        if ((user === null || user === void 0 ? void 0 : user.otp) !== otp) {
+            return res.status(400).json({ success: false, message: "Incorrect OTP" });
+        }
+        if ((user === null || user === void 0 ? void 0 : user.otp_expiry) &&
+            new Date(user.otp_expiry) instanceof Date &&
+            new Date() > new Date(user.otp_expiry)) {
+            return res
+                .status(400)
+                .json({ success: false, message: "otp is expired" });
+        }
+        user.is_verified = true;
+        yield user.save();
+        return res.status(200).json({
+            success: true,
+            message: "OTP verified successfully. You can now sign in."
+        });
+    }
+    catch (error) {
+        console.error("Error verifying OTP:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error"
+        });
+    }
+});
+exports.verifySignupOtp = verifySignupOtp;
 const requestOtp = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { email } = req.body;
     if (!email) {
@@ -313,3 +351,48 @@ const socialLogin = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     }
 });
 exports.socialLogin = socialLogin;
+const signup = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { email, password } = req.body;
+    if (!email || !password) {
+        return res.status(400).json({
+            success: false,
+            message: "Email and Password required"
+        });
+    }
+    try {
+        const existingUser = yield users_model_1.default.findOne({ email });
+        if (existingUser) {
+            return res.status(409).json({
+                success: false,
+                message: "Email already registered",
+            });
+        }
+        const otp = (0, otp_1.generateOtp)();
+        const otpExpiry = new Date(Date.now() + 60 * 1000);
+        const newUser = new users_model_1.default({
+            email,
+            password: yield (0, bcrytp_1.hashPassword)(password),
+            name: "Subtracker User",
+            otp,
+            otp_expiry: otpExpiry,
+            is_verified: false
+        });
+        yield newUser.save();
+        console.log("New user created:", newUser);
+        const subject = "Your Signup OTP";
+        const body = `Your OTP for signup is: ${otp}. It will expire in 60 seconds.`;
+        yield (0, sendMail_1.sendMail)(email, subject, body);
+        return res.status(200).json({
+            success: true,
+            message: "OTP sent successfully. Please check your email for verification.",
+        });
+    }
+    catch (error) {
+        console.error("Error during signup: ", error);
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error",
+        });
+    }
+});
+exports.signup = signup;
