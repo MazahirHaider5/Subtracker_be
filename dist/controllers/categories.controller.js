@@ -27,7 +27,11 @@ const createCategory = (req, res) => __awaiter(void 0, void 0, void 0, function*
         }
         const decodedToken = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET);
         const userId = decodedToken.id;
-        const { category_name, category_desc, category_budget, category_image } = req.body;
+        const { category_name, category_desc, category_budget } = req.body;
+        const files = req.file;
+        const category_image = (files === null || files === void 0 ? void 0 : files.path) || "";
+        console.log("Request Body:", req.body);
+        console.log("Uploaded File:", files);
         if (!category_name || !category_budget) {
             return res.status(400).json({
                 success: false,
@@ -47,9 +51,9 @@ const createCategory = (req, res) => __awaiter(void 0, void 0, void 0, function*
         const newCategory = new categories_model_1.default({
             user: userId,
             category_name,
-            category_desc: category_desc || "",
+            category_desc: category_desc !== null && category_desc !== void 0 ? category_desc : "",
             category_budget,
-            category_image: category_image || "",
+            category_image,
             monthly_data: {}
         });
         yield newCategory.save();
