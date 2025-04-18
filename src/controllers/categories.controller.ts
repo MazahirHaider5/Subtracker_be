@@ -17,13 +17,21 @@ export const createCategory = async (req: Request, res: Response) => {
       id: string;
     };
     const userId = decodedToken.id;
-    const { category_name, category_desc, category_budget, category_image } = req.body;
+
+    const { category_name, category_desc, category_budget } = req.body;
+    const files = req.file;
+    const category_image = files?.path || "";
+
+    console.log("Request Body:", req.body);
+    console.log("Uploaded File:", files);
+
     if (!category_name || !category_budget) {
       return res.status(400).json({
         success: false,
         message: "Category name and budget required"
       });
     }
+
     const existingCategory = await Category.findOne({
       user: userId,
       category_name: { $regex: new RegExp(`^${category_name}$`, 'i') }
@@ -34,12 +42,13 @@ export const createCategory = async (req: Request, res: Response) => {
         message: "You already have a category with this name, please use a different name"
       });
     }
+
     const newCategory = new Category({
       user: userId,
       category_name,
-      category_desc: category_desc || "",
+      category_desc: category_desc ?? "",
       category_budget,
-      category_image: category_image || "",
+      category_image,
       monthly_data: {}
     });
     await newCategory.save();
