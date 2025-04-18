@@ -5,15 +5,17 @@ import {
   requestOtp,
   resendOtp,
   resetPassword,
+  signup,
   socialLogin,
-  verifyOtp
+  verifyOtp,
+  verifySignupOtp
 } from "../controllers/auth.controller";
 import {
   googleCallback,
   loginWithGoogle
 } from "../controllers/googleAuth.controller";
 import { verifyAccessToken } from "../utils/jwt";
-import { verifySignupOtp } from "../controllers/user.controllers";
+
 import {
   appleCallback,
   loginWithApple
@@ -21,6 +23,7 @@ import {
 
 const router = express.Router();
 
+router.post("/signup", signup);
 router.post("/verifyOtp", verifySignupOtp);
 
 router.post("/login", login);

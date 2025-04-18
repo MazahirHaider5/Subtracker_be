@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import User, { IUser } from "../models/users.model";
+import User from "../models/users.model";
 import Activity from "../models/activity.model";
 import { hashPassword, comparePassword } from "../utils/bcrytp";
 import { uploadImageOnly } from "../config/multer";
@@ -91,49 +91,7 @@ export const deleteAccount = async (req: Request, res: Response) => {
   }
 };
 
-export const verifySignupOtp = async (req: Request, res: Response) => {
-  const { email, otp } = req.body;
 
-  if (!email || !otp) {
-    return res
-      .status(400)
-      .json({ success: false, message: "Email and OTP are required" });
-  }
-
-  try {
-    const user: IUser | null = await User.findOne({ email: email });
-    if (!user) {
-      return res.status(404).json({ success: false, message: "user not fou" });
-    }
-
-    if (user?.otp !== otp) {
-      return res.status(400).json({ success: false, message: "Incorrect OTP" });
-    }
-
-    if (
-      user?.otp_expiry &&
-      new Date(user.otp_expiry) instanceof Date &&
-      new Date() > new Date(user.otp_expiry)
-    ) {
-      return res
-        .status(400)
-        .json({ success: false, message: "otp is expired" });
-    }
-    user.is_verified = true;
-    await user.save();
-
-    return res.status(200).json({
-      success: true,
-      message: "OTP verified successfully. You can now sign in."
-    });
-  } catch (error) {
-    console.error("Error verifying OTP:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Internal server error"
-    });
-  }
-};
 
 export const updateUser = [
   uploadImageOnly.single("photo"),

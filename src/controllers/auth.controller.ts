@@ -70,6 +70,50 @@ export const login = async (req: Request, res: Response) => {
   }
 };
 
+export const verifySignupOtp = async (req: Request, res: Response) => {
+  const { email, otp } = req.body;
+
+  if (!email || !otp) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Email and OTP are required" });
+  }
+
+  try {
+    const user: IUser | null = await User.findOne({ email: email });
+    if (!user) {
+      return res.status(404).json({ success: false, message: "user not found" });
+    }
+
+    if (user?.otp !== otp) {
+      return res.status(400).json({ success: false, message: "Incorrect OTP" });
+    }
+
+    if (
+      user?.otp_expiry &&
+      new Date(user.otp_expiry) instanceof Date &&
+      new Date() > new Date(user.otp_expiry)
+    ) {
+      return res
+        .status(400)
+        .json({ success: false, message: "otp is expired" });
+    }
+    user.is_verified = true;
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "OTP verified successfully. You can now sign in."
+    });
+  } catch (error) {
+    console.error("Error verifying OTP:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error"
+    });
+  }
+};
+
 export const requestOtp = async (req: Request, res: Response) => {
   const { email } = req.body;
 
@@ -328,3 +372,55 @@ export const socialLogin = async (req: Request, res: Response) => {
     });
   }
 };
+
+export const signup = async (req: Request, res: Response) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({
+      success: false,
+      message: "Email and Password required"
+    });
+  }
+  try {
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(409).json({
+        success: false,
+        message: "Email already registered",
+      });
+    }
+    const otp = generateOtp();
+    const otpExpiry = new Date(Date.now() + 60 * 1000);
+
+    const newUser = new User({
+      email,
+      password: await hashPassword(password),
+      name: "Subtracker User",
+      otp,
+      otp_expiry: otpExpiry,
+      is_verified: false
+    });
+    
+    await newUser.save();
+    console.log("New user created:", newUser);
+
+    const subject = "Your Signup OTP";
+    const body = `Your OTP for signup is: ${otp}. It will expire in 60 seconds.`;
+    await sendMail(email, subject, body);
+
+    return res.status(200).json({
+      success: true,
+      message: "OTP sent successfully. Please check your email for verification.",
+    });
+
+  } catch (error) {
+    console.error("Error during signup: ", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+
