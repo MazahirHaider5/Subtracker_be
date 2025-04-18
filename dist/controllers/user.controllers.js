@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.changePassword = exports.getUserDetails = exports.setPassword = exports.updateSpecificFields = exports.changeCurrency = exports.changeLanguage = exports.updateUser = exports.verifySignupOtp = exports.deleteAccount = exports.getUsers = void 0;
+exports.changePassword = exports.getUserDetails = exports.setPassword = exports.updateSpecificFields = exports.changeCurrency = exports.changeLanguage = exports.updateUser = exports.deleteAccount = exports.getUsers = void 0;
 const users_model_1 = __importDefault(require("../models/users.model"));
 const activity_model_1 = __importDefault(require("../models/activity.model"));
 const bcrytp_1 = require("../utils/bcrytp");
@@ -91,44 +91,6 @@ const deleteAccount = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     }
 });
 exports.deleteAccount = deleteAccount;
-const verifySignupOtp = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { email, otp } = req.body;
-    if (!email || !otp) {
-        return res
-            .status(400)
-            .json({ success: false, message: "Email and OTP are required" });
-    }
-    try {
-        const user = yield users_model_1.default.findOne({ email: email });
-        if (!user) {
-            return res.status(404).json({ success: false, message: "user not fou" });
-        }
-        if ((user === null || user === void 0 ? void 0 : user.otp) !== otp) {
-            return res.status(400).json({ success: false, message: "Incorrect OTP" });
-        }
-        if ((user === null || user === void 0 ? void 0 : user.otp_expiry) &&
-            new Date(user.otp_expiry) instanceof Date &&
-            new Date() > new Date(user.otp_expiry)) {
-            return res
-                .status(400)
-                .json({ success: false, message: "otp is expired" });
-        }
-        user.is_verified = true;
-        yield user.save();
-        return res.status(200).json({
-            success: true,
-            message: "OTP verified successfully. You can now sign in."
-        });
-    }
-    catch (error) {
-        console.error("Error verifying OTP:", error);
-        return res.status(500).json({
-            success: false,
-            message: "Internal server error"
-        });
-    }
-});
-exports.verifySignupOtp = verifySignupOtp;
 exports.updateUser = [
     multer_1.uploadImageOnly.single("photo"),
     (req, res) => __awaiter(void 0, void 0, void 0, function* () {
