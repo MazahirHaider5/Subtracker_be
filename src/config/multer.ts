@@ -32,9 +32,7 @@ const uploadImageOnly = multer({
         cb(new Error("Invalid file type. Only JPG and PNG images are allowed."), false); // Reject other files
       }
     }
-  });
-
-
+});
 
 const upload = multer ({storage, fileFilter});
 
