@@ -15,7 +15,16 @@ export const createCategory = async (req: Request, res: Response) => {
     }
     const decodedToken = jwt.verify(token, process.env.JWT_SECRET!) as {
       id: string;
+      user_type?: string;
     };
+    // Check if user is admin
+    if (decodedToken.user_type !== "admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied. Only admin users can create categories"
+      });
+    }
+    
     const userId = decodedToken.id;
 
     const { category_name, category_desc, category_budget } = req.body;
