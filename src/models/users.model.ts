@@ -31,6 +31,7 @@ export interface IUser extends Document {
   signup_date: Date;
   stripeCustomerId: string;
   last_login: Date;
+  fcmToken: string;
 }
 
 // Mongoose schema
@@ -115,6 +116,10 @@ const UserSchema: Schema = new Schema<IUser>(
       type: Date,
       default: null
     },
+    fcmToken: {
+      type: String,
+      default: null
+    },
     reset_token: { type: String },
     reset_token_expiry: { type: Date },
     stripeCustomerId: { type: String },
@@ -126,6 +131,7 @@ const UserSchema: Schema = new Schema<IUser>(
     purchaseDate: { type: String },
     credits: { type: Number, default: 1000 }
   },
+
   {
     timestamps: true
   }
