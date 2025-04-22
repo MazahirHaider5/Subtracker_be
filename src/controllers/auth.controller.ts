@@ -501,3 +501,41 @@ export const resendPasswordResetOtp = async (req: Request, res: Response) => {
       .json({ success: false, message: "Internal server error" });
   }
 };
+
+export const verifyPasswordResetOtp = async (req: Request, res: Response) => {
+  const { email, otp } = req.body;
+  if (!email || !otp) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Email and otp are required" });
+  }
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res
+        .status(400)
+        .json({ success: false, message: "User not found" });
+    }
+    //checking if otp is correct
+    if (user.otp !== otp) {
+      return res.status(400).json({ success: false, message: "Incorrect OTP" });
+    }
+    //checking if otp is expired
+    if (user.otp_expiry && new Date() > user.otp_expiry) {
+      return res
+        .status(400)
+        .json({ success: false, message: "OTP has expired" });
+    }
+    user.is_verified = true;
+    await user.save();
+
+    return res
+      .status(200)
+      .json({ success: true, message: "OTP verified successfully" });
+  } catch (error) {
+    console.log("Error occured in verifyOtp : ", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal server error" });
+  }
+};
