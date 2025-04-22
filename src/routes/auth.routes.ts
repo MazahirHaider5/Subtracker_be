@@ -10,6 +10,7 @@ import {
   signup,
   socialLogin,
   verifyOtp,
+  verifyPasswordResetOtp,
   verifySignupOtp
 } from "../controllers/auth.controller";
 import {
@@ -41,8 +42,7 @@ router.post("/verifyOtp", verifyOtp);
 
 router.post("/requestPasswordResetOtp", requestPasswordResetOtp);
 router.post("/resendPasswordResetOtp", resendPasswordResetOtp);
-
-
+router.post("/verifyPasswordResetOtp", verifyPasswordResetOtp);
 
 
 router.post("/resetPassword", resetPassword);
