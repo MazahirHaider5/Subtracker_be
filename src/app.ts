@@ -9,6 +9,8 @@ import routes from "./routes";
 import passport from "passport";
 import session from "express-session";
 import path from "path";
+import "./utils/subscriptionReminderJob"; 
+
 
 
 
