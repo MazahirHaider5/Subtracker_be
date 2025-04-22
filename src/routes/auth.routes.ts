@@ -5,6 +5,7 @@ import {
   requestOtp,
   requestPasswordResetOtp,
   resendOtp,
+  resendPasswordResetOtp,
   resetPassword,
   signup,
   socialLogin,
@@ -39,6 +40,7 @@ router.post("/verifyOtp", verifyOtp);
 
 
 router.post("/requestPasswordResetOtp", requestPasswordResetOtp);
+router.post("/resendPasswordResetOtp", resendPasswordResetOtp);
 
 
 
