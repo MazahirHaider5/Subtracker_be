@@ -424,3 +424,39 @@ export const signup = async (req: Request, res: Response) => {
 };
 
 
+
+export const requestPasswordResetOtp = async (req: Request, res: Response) => {
+  const { email } = req.body;
+  if (!email) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Email is required" });
+  }
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+    const otp = generateOtp();
+
+    user.otp = otp;
+    (user.otp_expiry = new Date(Date.now() + 90 * 1000)), // 90 seconds expiry
+      await user.save();
+
+    const subject = "Password Reset OTP";
+    const body = `Your OTP for password reset is: ${otp}. It will expire in 90 seconds.`;
+    await sendMail(email, subject, body);
+
+    return res
+      .status(200)
+      .json({ success: true, message: "OTP sent to email" });
+  } catch (error) {
+    console.log("Error requesting password reset: ", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal server error" });
+  }
+};
+

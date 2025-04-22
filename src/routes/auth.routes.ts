@@ -3,6 +3,7 @@ import {
   login,
   logout,
   requestOtp,
+  requestPasswordResetOtp,
   resendOtp,
   resetPassword,
   signup,
@@ -35,6 +36,13 @@ router.post("/social-login", socialLogin);
 router.post("/requestOtp", requestOtp);
 router.post("/resendOtp", resendOtp);
 router.post("/verifyOtp", verifyOtp);
+
+
+router.post("/requestPasswordResetOtp", requestPasswordResetOtp);
+
+
+
+
 router.post("/resetPassword", resetPassword);
 
 router.get("/google", loginWithGoogle);
