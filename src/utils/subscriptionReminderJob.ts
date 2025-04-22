@@ -4,10 +4,13 @@ import Subscription from "../models/subscriptions.model";
 import Activity from "../models/activity.model";
 import { IUser } from "../models/users.model";
 import { Types } from "mongoose";
+import admin from "../firebase/firebase";
 
 interface PopulatedSubscription {
   _id: Types.ObjectId;
-  user: IUser;
+  user: IUser & {
+    fcmToken?: string;
+  };
   subscription_name: string;
   subscription_end: Date;
   notifiedBeforeEnd: boolean;
@@ -61,6 +64,25 @@ Thanks.`;
 
         await sendMail(sub.user.email, subject, body);
         console.log("Email sent to:", sub.user.email);
+        console.log("This is user FCM token:", sub.user.fcmToken);
+
+        // Send Firebase notification if FCM token exists
+        if (sub.user.fcmToken) {
+          const message = {
+            notification: {
+              title: subject,
+              body: `Your subscription "${sub.subscription_name}" will end in 1 hour.`
+            },
+            token: sub.user.fcmToken
+          };
+
+          try {
+            await admin.messaging().send(message);
+            console.log("Firebase notification sent successfully");
+          } catch (firebaseError) {
+            console.error("Firebase notification failed:", firebaseError);
+          }
+        }
 
         sub.notifiedBeforeEnd = true;
         await sub.save();
