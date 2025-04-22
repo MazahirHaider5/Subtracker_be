@@ -13,6 +13,7 @@ export interface ISubscriptions extends Document {
   is_paid: boolean;
   photo: string | null;
   pdf: string[] | null;
+  notifiedBeforeEnd: Boolean,
 }
 
 const SubscriptionSchema: Schema = new Schema<ISubscriptions>(
@@ -67,6 +68,10 @@ const SubscriptionSchema: Schema = new Schema<ISubscriptions>(
     pdf: {
       type: [String],
       required: false
+    },
+    notifiedBeforeEnd: {
+      type: Boolean,
+      default: false
     }
   },
   {

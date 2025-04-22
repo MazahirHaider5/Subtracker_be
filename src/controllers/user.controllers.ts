@@ -426,6 +426,11 @@ export const changePassword = async (req: Request, res: Response) => {
     user.password = newHashedPassword;
     await user.save();
 
+    await Activity.create({
+      userId,
+      activityType: "Password changed successfully"
+    });
+
     return res.status(200).json({
       success: true,
       message: "Password changed successfully"
