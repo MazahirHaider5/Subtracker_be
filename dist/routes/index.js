@@ -1,0 +1,26 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const auth_routes_1 = __importDefault(require("./auth.routes"));
+const user_routes_1 = __importDefault(require("./user.routes"));
+const subscriptions_routes_1 = __importDefault(require("./subscriptions.routes"));
+const categories_routes_1 = __importDefault(require("./categories.routes"));
+const dashboard_routes_1 = __importDefault(require("./dashboard.routes"));
+const adminDashboard_routes_1 = __importDefault(require("./adminDashboard.routes"));
+const complaint_routes_1 = __importDefault(require("./complaint.routes"));
+const activties_routes_1 = __importDefault(require("./activties.routes"));
+const appSubscription_routes_1 = __importDefault(require("./appSubscription.routes"));
+const router = (0, express_1.Router)();
+router.use("/auth", auth_routes_1.default);
+router.use("/users", user_routes_1.default);
+router.use("/subscriptions", subscriptions_routes_1.default);
+router.use("/categories", categories_routes_1.default);
+router.use("/dashboard", dashboard_routes_1.default);
+router.use("/admin", adminDashboard_routes_1.default);
+router.use("/complain", complaint_routes_1.default);
+router.use("/activities", activties_routes_1.default);
+router.use("/appSubscriptions", appSubscription_routes_1.default);
+exports.default = router;
