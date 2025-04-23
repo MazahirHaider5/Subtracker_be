@@ -426,8 +426,6 @@ export const signup = async (req: Request, res: Response) => {
   }
 };
 
-
-
 export const requestPasswordResetOtp = async (req: Request, res: Response) => {
   const { email } = req.body;
   if (!email) {

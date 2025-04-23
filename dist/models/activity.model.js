@@ -36,7 +36,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
 const activitySchema = new mongoose_1.Schema({
     userId: { type: mongoose_1.Schema.Types.ObjectId, ref: "User" },
-    activityType: { type: String, required: true }
+    activityType: { type: String, required: true },
+    isRead: { type: Boolean, default: false }
 }, {
     timestamps: true
 });
