@@ -91,8 +91,6 @@ export const deleteAccount = async (req: Request, res: Response) => {
   }
 };
 
-
-
 export const updateUser = [
   uploadImageOnly.single("photo"),
   async (req: Request, res: Response) => {

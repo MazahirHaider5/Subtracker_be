@@ -7,7 +7,7 @@ import { sendMail } from "../utils/sendMail";
 import { generateOtp } from "../utils/otp";
 
 export const login = async (req: Request, res: Response) => {
-  const { email, password } = req.body;
+  const { email, password, fcmToken } = req.body;
   if (!email || !password) {
     return res
       .status(400)
@@ -15,7 +15,7 @@ export const login = async (req: Request, res: Response) => {
   }
   try {
     const user = await User.findOne({ email }).select(
-      "id name email password photo phone language currency is_biomatric is_face_auth is_two_factor is_email_notification stripe_customer_id user_type is_verified is_active signup_date last_login"
+      "id name email password photo phone language currency is_biomatric is_face_auth is_two_factor is_email_notification stripe_customer_id user_type is_verified is_active signup_date last_login fcmToken"
     );
 
     if (!user) {
@@ -35,6 +35,8 @@ export const login = async (req: Request, res: Response) => {
         .status(404)
         .json({ success: false, message: "user not verified" });
     }
+    
+   
     const userPayload: IUser = user.toObject();
     delete userPayload.password;
     delete userPayload.otp;
@@ -50,7 +52,7 @@ export const login = async (req: Request, res: Response) => {
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // 'none' for cross-origin; 'lax' is okay for dev
       maxAge: 24 * 60 * 60 * 1000
     });
-    
+    user.fcmToken = fcmToken;
     user.last_login = new Date();
     await user.save();
 
