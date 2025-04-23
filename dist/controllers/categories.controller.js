@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getCategoriesSum = exports.updateCategory = exports.deleteCategory = exports.getCategories = exports.createCategory = void 0;
+exports.getAllCategories = exports.getCategoriesSum = exports.updateCategory = exports.deleteCategory = exports.getLoggedInUserCategories = exports.createCategory = void 0;
 const categories_model_1 = __importDefault(require("../models/categories.model"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const createCategory = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -79,7 +79,7 @@ const createCategory = (req, res) => __awaiter(void 0, void 0, void 0, function*
     }
 });
 exports.createCategory = createCategory;
-const getCategories = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getLoggedInUserCategories = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const token = req.cookies.accessToken ||
             (req.headers.authorization && req.headers.authorization.split(" ")[1]);
@@ -117,7 +117,7 @@ const getCategories = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         });
     }
 });
-exports.getCategories = getCategories;
+exports.getLoggedInUserCategories = getLoggedInUserCategories;
 const deleteCategory = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const token = req.cookies.accessToken ||
@@ -251,3 +251,22 @@ const getCategoriesSum = (req, res) => __awaiter(void 0, void 0, void 0, functio
     }
 });
 exports.getCategoriesSum = getCategoriesSum;
+const getAllCategories = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const categories = yield categories_model_1.default.find().select("category_name category_image category_budget total_budget");
+        res.status(200).json({
+            success: true,
+            message: "All categories fetched successfully",
+            categories
+        });
+    }
+    catch (error) {
+        console.error("Error fetching all categories:", error);
+        res.status(500).json({
+            success: false,
+            message: "Error fetching categories",
+            error: error.message
+        });
+    }
+});
+exports.getAllCategories = getAllCategories;
