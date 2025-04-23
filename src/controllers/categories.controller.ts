@@ -75,7 +75,7 @@ export const createCategory = async (req: Request, res: Response) => {
   }
 };
 
-export const getCategories = async (req: Request, res: Response) => {
+export const getLoggedInUserCategories = async (req: Request, res: Response) => {
   try {
     const token =
       req.cookies.accessToken ||
@@ -279,6 +279,25 @@ export const getCategoriesSum = async (req: Request, res: Response) => {
     return res.status(500).json({
       success: false,
       message: "Error fetching sum, internal server error"
+    });
+  }
+};
+
+export const getAllCategories = async (req: Request, res: Response) => {
+  try {
+    const categories = await Category.find().select("category_name category_image category_budget total_budget")
+    res.status(200).json({
+      success: true,
+      message: "All categories fetched successfully",
+      categories
+    });
+
+  } catch (error) {
+    console.error("Error fetching all categories:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error fetching categories",
+      error: (error as Error).message
     });
   }
 };
