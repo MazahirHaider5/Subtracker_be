@@ -16,6 +16,7 @@ const CardSchema = new mongoose.Schema<ICardSchema>(
   {
     name: {
       type: String,
+      enum: ["month", "year", "lifetime", "free_trial"],
       required: true
     },
     heading: {
@@ -50,7 +51,7 @@ const CardSchema = new mongoose.Schema<ICardSchema>(
     },
     durationUnit: {
       type: String,
-      enum: ["month", "year"],
+      enum: ["month", "year", "lifetime"],
       default: "month"
     },
     priceId: {

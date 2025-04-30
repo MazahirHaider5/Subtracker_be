@@ -285,7 +285,7 @@ export const getCategoriesSum = async (req: Request, res: Response) => {
 
 export const getAllCategories = async (req: Request, res: Response) => {
   try {
-    const categories = await Category.find().select("category_name category_image category_budget total_budget")
+    const categories = await Category.find().select("category_name category_image category_budget total_budget active_subscriptions spendings monthly_data createdAt user")
     res.status(200).json({
       success: true,
       message: "All categories fetched successfully",

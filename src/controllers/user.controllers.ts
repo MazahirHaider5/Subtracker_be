@@ -127,7 +127,8 @@ export const updateUser = [
       await user.save();
       await Activity.create({
         userId: user._id,
-        activityType: "profile updated"
+        title: "profile updated",
+        activityType: "profile updated successfuly",
       });
       return res.status(200).json({
         success: true,
@@ -426,7 +427,8 @@ export const changePassword = async (req: Request, res: Response) => {
 
     await Activity.create({
       userId,
-      activityType: "Password changed successfully"
+      title: "Password changed",
+      activityType: "Password changed successfully",
     });
 
     return res.status(200).json({

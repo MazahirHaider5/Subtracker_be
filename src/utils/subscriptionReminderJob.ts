@@ -49,6 +49,7 @@ cron.schedule("* * * * *", async () => {
       try {
         await Activity.create({
           userId: sub.user._id,
+          title: 'Subscription ending',
           activityType: `Subscription "${sub.subscription_name}" ending in 1 hour at ${sub.subscription_end.toLocaleString()}`
         });
 

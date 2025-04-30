@@ -32,6 +32,8 @@ export interface IUser extends Document {
   stripeCustomerId: string;
   last_login: Date;
   fcmToken: string;
+  subscribed_plan: string,
+  isPaymentComplete: string
 }
 
 // Mongoose schema
@@ -129,9 +131,12 @@ const UserSchema: Schema = new Schema<IUser>(
     },
     lastTransactionId: { type: String },
     purchaseDate: { type: String },
-    credits: { type: Number, default: 1000 }
+    credits: { type: Number, default: 1000 },
+    isPaymentComplete: {
+      type: String,
+      enum: ["pending, completed"]
+    },
   },
-
   {
     timestamps: true
   }
