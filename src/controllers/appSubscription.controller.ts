@@ -1,12 +1,14 @@
 import CardModel from "../models/appSubscription.model";
 import UserModel from "../models/users.model";
 import Stripe from "stripe";
-
 import { IUser } from "../models/users.model";
 import { Request, Response } from "express";
 const stripeSecretKey =
   process.env.STRIPE_SECRET_KEY || "your-default-secret-key";
 const stripe = new Stripe(stripeSecretKey);
+
+const YOUR_DOMAIN = 'http://localhost:5173/checkout';
+
 // Create a new plan
 export const createPlan = async (req: Request, res: Response) => {
   try {
@@ -158,13 +160,12 @@ export const getAllPlans = async (req: Request, res: Response) => {
   }
 };
 
-// Stripe checkout session
 export const createCheckoutSession = async (req: Request, res: Response) => {
   try {
     const buyer = req.user as IUser;
     const userId = buyer.id.toString();
-    const { price, membershipName, successUrl, cancelUrl } = req.body;
-    if (!price || !membershipName || !successUrl || !cancelUrl) {
+    const { price, membershipName } = req.body;
+    if (!price || !membershipName) {
       return res.status(400).json({ error: "Missing required fields." });
     }
     const user = await UserModel.findById(userId);
@@ -172,6 +173,8 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
       return res.status(404).json({ error: "User not found." });
     }
     let stripeCustomerId = user.stripeCustomerId;
+    console.log("This is user Stripe customer Id",stripeCustomerId);
+    
     if (!stripeCustomerId) {
       const customer = await stripe.customers.create({
         email: user.email,
@@ -179,6 +182,7 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
       });
       stripeCustomerId = customer.id;
       user.stripeCustomerId = stripeCustomerId;
+      user.membershipName = membershipName;
       await user.save();
     }
     const stripePrice = await stripe.prices.create({
@@ -198,16 +202,15 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
         }
       ],
       mode: "payment",
-      success_url: successUrl,
-      cancel_url: cancelUrl,
+      success_url: `${YOUR_DOMAIN}?session_id={CHECKOUT_SESSION_ID}`, // Success redirect
+      cancel_url: `${YOUR_DOMAIN}?payment-cancelled`,
       metadata: {
         userId,
-
-        membershipName: membershipName
+        membershipName
       }
     });
-
-    res.status(200).json({ sessionId: session.id, url: session.url });
+    
+    res.status(200).json({ sessionId: session.id, url: session.url , status: true});
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -365,7 +368,10 @@ export const getUserSubscriptionDetails = async (
   try {
     const buyer = req.user as IUser;
     const userId = buyer.id;
-    const user: IUser | null = await UserModel.findById(userId);
+    const user = await UserModel.findById(userId).select(
+      'membershipName credits stripeCustomerId purchaseDate lastTransactionId'
+    );
+    
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -374,10 +380,10 @@ export const getUserSubscriptionDetails = async (
     }
     const data = {
       membershipName: user.membershipName,
-
       credits: user.credits,
       stripeCustomerId: user.stripeCustomerId,
-      purchaseDate: user.purchaseDate
+      purchaseDate: user.purchaseDate,
+      lastTransactionId: user.lastTransactionId
     };
     res.status(200).json({
       success: true,
@@ -388,6 +394,138 @@ export const getUserSubscriptionDetails = async (
       success: false,
       message: "An error occurred while fetching subscription details.",
       error: error.message
+    });
+  }
+};
+
+// export const handleStripeWebhook = async (req: Request, res: Response) => {
+//   const signature = req.headers['stripe-signature'] as string;
+
+//   try {
+//     const event = stripe.webhooks.constructEvent(
+//       req.body,
+//       signature,
+//       process.env.STRIPE_WEBHOOK_SECRET!
+//     );
+
+//     if (event.type === 'checkout.session.completed') {
+//       const session = event.data.object as Stripe.Checkout.Session;
+//       const { userId, membershipName } = session.metadata || {};
+
+//       if (userId && membershipName) {
+//         // Update user's membership after successful payment
+//         await UserModel.findByIdAndUpdate(userId, {
+//           membershipName: membershipName,
+//           subscribed_plan: membershipName,
+//           purchaseDate: new Date().toISOString()
+//         });
+
+//         console.log(`Updated membership for user ${userId} to ${membershipName}`);
+//       }
+//     }
+
+//     res.json({ received: true });
+//   } catch (err : any) {
+//     console.error('Webhook Error:', err);
+//     return res.status(400).send(`Webhook Error: ${err.message}`);
+//   }
+// };
+
+export const handlePaymentComplete = async (req: Request, res: Response) => {
+  const { session_id } = req.body;
+
+  try {
+    if (!session_id) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Session ID is required' 
+      });
+    }
+
+    // Retrieve session with expanded payment_intent data
+    const session = await stripe.checkout.sessions.retrieve(
+      session_id as string,
+      {
+        expand: ['payment_intent']
+      }
+    );
+
+    const { userId, membershipName } = session.metadata || {};
+
+    if (!session.payment_intent) {
+      return res.status(400).json({
+        success: false,
+        message: 'No payment intent found for this session'
+      });
+    }
+
+    // Safely get payment intent ID
+    const paymentIntentId = typeof session.payment_intent === 'string' 
+      ? session.payment_intent 
+      : session.payment_intent.id;
+
+    if (!userId || !membershipName) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Invalid session metadata' 
+      });
+    }
+
+    // Find user and check payment status
+    const user = await UserModel.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'User not found' 
+      });
+    }
+
+    if (user.isPaymentComplete === 'completed') {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Payment has already been processed' 
+      });
+    }
+
+    // Update user with payment completion and membership details
+    const updatedUser = await UserModel.findByIdAndUpdate(
+      userId,
+      {
+        $set: {
+          isPaymentComplete: 'completed',
+          membershipName: membershipName,
+          purchaseDate: new Date().toISOString(),
+          lastTransactionId: paymentIntentId
+        }
+      },
+      { new: true }
+    );
+
+    if (!updatedUser) {
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to update user payment status'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Payment completed successfully',
+      data: {
+        status: session.status,
+        membershipName: updatedUser.membershipName,
+        purchaseDate: updatedUser.purchaseDate,
+        transactionId: updatedUser.lastTransactionId
+      }
+    });
+
+  } catch (error) {
+    console.error('Error processing payment completion:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error processing payment completion',
+      error: (error as Error).message 
     });
   }
 };

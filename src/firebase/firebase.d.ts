@@ -1,7 +1,3 @@
-// import { app } from 'firebase-admin';
-
-// declare const admin: app.App;
-// export = admin;
 
 import { ServiceAccount } from "firebase-admin";
 

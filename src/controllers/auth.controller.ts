@@ -15,7 +15,7 @@ export const login = async (req: Request, res: Response) => {
   }
   try {
     const user = await User.findOne({ email }).select(
-      "id name email password photo phone language currency is_biomatric is_face_auth is_two_factor is_email_notification stripe_customer_id user_type is_verified is_active signup_date last_login fcmToken"
+      "id name email password photo phone language currency is_biomatric is_face_auth is_two_factor is_email_notification stripe_customer_id user_type is_verified is_active signup_date last_login"
     );
 
     if (!user) {
@@ -60,7 +60,7 @@ export const login = async (req: Request, res: Response) => {
       success: true,
       message: "Login successful",
       user: userPayload,
-      accessToken: accessToken
+      accessToken: accessToken,
     });
   } catch (error) {
     console.error("Error during login:", error);
@@ -160,7 +160,6 @@ export const requestOtp = async (req: Request, res: Response) => {
   }
 };
 
-
 export const resendOtp = async (req: Request, res: Response) => {
   const { email } = req.body;
 
@@ -210,7 +209,6 @@ export const resendOtp = async (req: Request, res: Response) => {
     });
   }
 };
-
 
 export const verifyOtp = async (req: Request, res: Response) => {
   const { email, otp } = req.body;
