@@ -103,42 +103,42 @@ export const createSubscription = [
   }
 ];
 
-export const getUserSubscription = async (req: Request, res: Response) => {
-  try {
-    const token =
-      req.cookies.accessToken ||
-      (req.headers.authorization && req.headers.authorization.split(" ")[1]);
-    if (!token) {
-      return res.status(401).json({
-        success: false,
-        message: "Unauthorized , No token provided"
-      });
-    }
-    const decodeToken = jwt.verify(token, process.env.JWT_SECRET!) as {
-      id: string;
-      email: string;
-    };
-    const userId = decodeToken.id;
-    const userSubscription = await Subscription.find({ user: userId })
-    .populate({
-      path: "subscription_ctg",
-      select: "category_name"
-    });
-    const test = await Subscription.findOne({ subscription_name: "Hisham Sub 3" }).populate("subscription_ctg");
-    console.log("This is test broooooo",test);
+// export const getUserSubscription = async (req: Request, res: Response) => {
+//   try {
+//     const token =
+//       req.cookies.accessToken ||
+//       (req.headers.authorization && req.headers.authorization.split(" ")[1]);
+//     if (!token) {
+//       return res.status(401).json({
+//         success: false,
+//         message: "Unauthorized , No token provided"
+//       });
+//     }
+//     const decodeToken = jwt.verify(token, process.env.JWT_SECRET!) as {
+//       id: string;
+//       email: string;
+//     };
+//     const userId = decodeToken.id;
+//     const userSubscription = await Subscription.find({ user: userId })
+//     .populate({
+//       path: "subscription_ctg",
+//       select: "category_name"
+//     });
+//     const test = await Subscription.findOne({ subscription_name: "Hisham Sub 3" }).populate("subscription_ctg");
+//     console.log("This is test broooooo",test);
     
-    res.status(201).json({
-      success: true,
-      message: "Subscriptions fetched successfullyyyyyyyy",
-      subscriptions: userSubscription
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Internal server error"
-    });
-  }
-};
+//     res.status(201).json({
+//       success: true,
+//       message: "Subscriptions fetched successfullyyyyyyyy",
+//       subscriptions: userSubscription
+//     });
+//   } catch (error) {
+//     res.status(500).json({
+//       success: false,
+//       message: "Internal server error"
+//     });
+//   }
+// };
 
 export const deleteSubscription = [
   async (req: Request, res: Response) => {
