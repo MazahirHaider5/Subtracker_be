@@ -5,6 +5,7 @@ import { upload } from "../config/multer";
 import jwt from "jsonwebtoken";
 import { Types } from "mongoose";
 
+
 export const createSubscription = [
   upload.fields([
     { name: "photo", maxCount: 1 },
