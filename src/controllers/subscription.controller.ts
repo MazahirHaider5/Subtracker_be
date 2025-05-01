@@ -118,6 +118,8 @@ export const getUserSubscription = async (req: Request, res: Response) => {
       id: string;
       email: string;
     };
+
+    
     const userId = decodeToken.id;
     const userSubscription = await Subscription.find({ user: userId })
     .populate({
