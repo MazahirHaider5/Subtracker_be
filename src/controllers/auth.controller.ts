@@ -248,6 +248,7 @@ export const verifyOtp = async (req: Request, res: Response) => {
   }
 };
 
+
 export const resetPassword = async (req: Request, res: Response) => {
   const { email, newPassword } = req.body;
   if (!email || !newPassword) {
@@ -537,3 +538,6 @@ export const verifyPasswordResetOtp = async (req: Request, res: Response) => {
       .json({ success: false, message: "Internal server error" });
   }
 };
+
+
+
