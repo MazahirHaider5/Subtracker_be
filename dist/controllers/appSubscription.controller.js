@@ -23,12 +23,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getUserSubscriptionDetails = exports.createCheckoutSession = exports.getAllPlans = exports.deletePlan = exports.updatePlan = exports.createPlan = void 0;
+exports.handlePaymentComplete = exports.getUserSubscriptionDetails = exports.createCheckoutSession = exports.getAllPlans = exports.deletePlan = exports.updatePlan = exports.createPlan = void 0;
 const appSubscription_model_1 = __importDefault(require("../models/appSubscription.model"));
 const users_model_1 = __importDefault(require("../models/users.model"));
 const stripe_1 = __importDefault(require("stripe"));
 const stripeSecretKey = process.env.STRIPE_SECRET_KEY || "your-default-secret-key";
 const stripe = new stripe_1.default(stripeSecretKey);
+const YOUR_DOMAIN = 'http://localhost:5173/checkout';
 // Create a new plan
 const createPlan = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
@@ -155,13 +156,12 @@ const getAllPlans = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     }
 });
 exports.getAllPlans = getAllPlans;
-// Stripe checkout session
 const createCheckoutSession = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const buyer = req.user;
         const userId = buyer.id.toString();
-        const { price, membershipName, successUrl, cancelUrl } = req.body;
-        if (!price || !membershipName || !successUrl || !cancelUrl) {
+        const { price, membershipName } = req.body;
+        if (!price || !membershipName) {
             return res.status(400).json({ error: "Missing required fields." });
         }
         const user = yield users_model_1.default.findById(userId);
@@ -169,6 +169,7 @@ const createCheckoutSession = (req, res) => __awaiter(void 0, void 0, void 0, fu
             return res.status(404).json({ error: "User not found." });
         }
         let stripeCustomerId = user.stripeCustomerId;
+        console.log("This is user Stripe customer Id", stripeCustomerId);
         if (!stripeCustomerId) {
             const customer = yield stripe.customers.create({
                 email: user.email,
@@ -176,6 +177,7 @@ const createCheckoutSession = (req, res) => __awaiter(void 0, void 0, void 0, fu
             });
             stripeCustomerId = customer.id;
             user.stripeCustomerId = stripeCustomerId;
+            user.membershipName = membershipName;
             yield user.save();
         }
         const stripePrice = yield stripe.prices.create({
@@ -195,14 +197,14 @@ const createCheckoutSession = (req, res) => __awaiter(void 0, void 0, void 0, fu
                 }
             ],
             mode: "payment",
-            success_url: successUrl,
-            cancel_url: cancelUrl,
+            success_url: `${YOUR_DOMAIN}?session_id={CHECKOUT_SESSION_ID}`, // Success redirect
+            cancel_url: `${YOUR_DOMAIN}?payment-cancelled`,
             metadata: {
                 userId,
-                membershipName: membershipName
+                membershipName
             }
         });
-        res.status(200).json({ sessionId: session.id, url: session.url });
+        res.status(200).json({ sessionId: session.id, url: session.url, status: true });
     }
     catch (error) {
         res.status(500).json({ error: error.message });
@@ -341,7 +343,7 @@ const getUserSubscriptionDetails = (req, res) => __awaiter(void 0, void 0, void 
     try {
         const buyer = req.user;
         const userId = buyer.id;
-        const user = yield users_model_1.default.findById(userId);
+        const user = yield users_model_1.default.findById(userId).select('membershipName credits stripeCustomerId purchaseDate lastTransactionId');
         if (!user) {
             return res.status(404).json({
                 success: false,
@@ -352,7 +354,8 @@ const getUserSubscriptionDetails = (req, res) => __awaiter(void 0, void 0, void 
             membershipName: user.membershipName,
             credits: user.credits,
             stripeCustomerId: user.stripeCustomerId,
-            purchaseDate: user.purchaseDate
+            purchaseDate: user.purchaseDate,
+            lastTransactionId: user.lastTransactionId
         };
         res.status(200).json({
             success: true,
@@ -368,3 +371,110 @@ const getUserSubscriptionDetails = (req, res) => __awaiter(void 0, void 0, void 
     }
 });
 exports.getUserSubscriptionDetails = getUserSubscriptionDetails;
+// export const handleStripeWebhook = async (req: Request, res: Response) => {
+//   const signature = req.headers['stripe-signature'] as string;
+//   try {
+//     const event = stripe.webhooks.constructEvent(
+//       req.body,
+//       signature,
+//       process.env.STRIPE_WEBHOOK_SECRET!
+//     );
+//     if (event.type === 'checkout.session.completed') {
+//       const session = event.data.object as Stripe.Checkout.Session;
+//       const { userId, membershipName } = session.metadata || {};
+//       if (userId && membershipName) {
+//         // Update user's membership after successful payment
+//         await UserModel.findByIdAndUpdate(userId, {
+//           membershipName: membershipName,
+//           subscribed_plan: membershipName,
+//           purchaseDate: new Date().toISOString()
+//         });
+//         console.log(`Updated membership for user ${userId} to ${membershipName}`);
+//       }
+//     }
+//     res.json({ received: true });
+//   } catch (err : any) {
+//     console.error('Webhook Error:', err);
+//     return res.status(400).send(`Webhook Error: ${err.message}`);
+//   }
+// };
+const handlePaymentComplete = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { session_id } = req.body;
+    try {
+        if (!session_id) {
+            return res.status(400).json({
+                success: false,
+                message: 'Session ID is required'
+            });
+        }
+        // Retrieve session with expanded payment_intent data
+        const session = yield stripe.checkout.sessions.retrieve(session_id, {
+            expand: ['payment_intent']
+        });
+        const { userId, membershipName } = session.metadata || {};
+        if (!session.payment_intent) {
+            return res.status(400).json({
+                success: false,
+                message: 'No payment intent found for this session'
+            });
+        }
+        // Safely get payment intent ID
+        const paymentIntentId = typeof session.payment_intent === 'string'
+            ? session.payment_intent
+            : session.payment_intent.id;
+        if (!userId || !membershipName) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid session metadata'
+            });
+        }
+        // Find user and check payment status
+        const user = yield users_model_1.default.findById(userId);
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+        if (user.isPaymentComplete === 'completed') {
+            return res.status(400).json({
+                success: false,
+                message: 'Payment has already been processed'
+            });
+        }
+        // Update user with payment completion and membership details
+        const updatedUser = yield users_model_1.default.findByIdAndUpdate(userId, {
+            $set: {
+                isPaymentComplete: 'completed',
+                membershipName: membershipName,
+                purchaseDate: new Date().toISOString(),
+                lastTransactionId: paymentIntentId
+            }
+        }, { new: true });
+        if (!updatedUser) {
+            return res.status(500).json({
+                success: false,
+                message: 'Failed to update user payment status'
+            });
+        }
+        res.status(200).json({
+            success: true,
+            message: 'Payment completed successfully',
+            data: {
+                status: session.status,
+                membershipName: updatedUser.membershipName,
+                purchaseDate: updatedUser.purchaseDate,
+                transactionId: updatedUser.lastTransactionId
+            }
+        });
+    }
+    catch (error) {
+        console.error('Error processing payment completion:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error processing payment completion',
+            error: error.message
+        });
+    }
+});
+exports.handlePaymentComplete = handlePaymentComplete;

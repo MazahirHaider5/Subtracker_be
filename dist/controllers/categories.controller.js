@@ -253,7 +253,7 @@ const getCategoriesSum = (req, res) => __awaiter(void 0, void 0, void 0, functio
 exports.getCategoriesSum = getCategoriesSum;
 const getAllCategories = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const categories = yield categories_model_1.default.find().select("category_name category_image category_budget total_budget");
+        const categories = yield categories_model_1.default.find().select("category_name category_image category_budget total_budget active_subscriptions spendings monthly_data createdAt user");
         res.status(200).json({
             success: true,
             message: "All categories fetched successfully",

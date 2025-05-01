@@ -42,6 +42,7 @@ node_cron_1.default.schedule("* * * * *", () => __awaiter(void 0, void 0, void 0
             try {
                 yield activity_model_1.default.create({
                     userId: sub.user._id,
+                    title: 'Subscription ending',
                     activityType: `Subscription "${sub.subscription_name}" ending in 1 hour at ${sub.subscription_end.toLocaleString()}`
                 });
                 const subject = `Subscription Ending Soon: ${sub.subscription_name}`;

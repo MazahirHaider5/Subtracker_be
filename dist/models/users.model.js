@@ -128,7 +128,11 @@ const UserSchema = new mongoose_1.Schema({
     },
     lastTransactionId: { type: String },
     purchaseDate: { type: String },
-    credits: { type: Number, default: 1000 }
+    credits: { type: Number, default: 1000 },
+    isPaymentComplete: {
+        type: String,
+        enum: ["pending, completed"]
+    },
 }, {
     timestamps: true
 });

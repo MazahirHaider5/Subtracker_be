@@ -37,7 +37,8 @@ const mongoose_1 = __importStar(require("mongoose"));
 const activitySchema = new mongoose_1.Schema({
     userId: { type: mongoose_1.Schema.Types.ObjectId, ref: "User" },
     activityType: { type: String, required: true },
-    isRead: { type: Boolean, default: false }
+    isRead: { type: Boolean, default: false },
+    title: { type: String, required: true }
 }, {
     timestamps: true
 });

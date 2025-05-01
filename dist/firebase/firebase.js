@@ -1,5 +1,4 @@
 "use strict";
-// import * as admin from "firebase-admin";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -37,18 +36,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-// const serviceAccount = require("./subtracker-f7bbb-c3778b875919.json");
-// if (!admin.apps.length) {
-//   try {
-//     admin.initializeApp({
-//       credential: admin.credential.cert(serviceAccount)
-//     });
-//     console.log('Firebase Admin initialized successfully');
-//   } catch (error) {
-//     console.error('Firebase admin initialization error:', error);
-//   }
-// }
-// export default admin;
 const admin = __importStar(require("firebase-admin"));
 const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
