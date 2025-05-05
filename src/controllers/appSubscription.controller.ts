@@ -164,7 +164,7 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
   try {
     const buyer = req.user as IUser;
     const userId = buyer.id.toString();
-    const { price, membershipName } = req.body;
+    const { price, membershipName, success_url, cancel_url } = req.body;
     if (!price || !membershipName) {
       return res.status(400).json({ error: "Missing required fields." });
     }
@@ -202,8 +202,8 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
         }
       ],
       mode: "payment",
-      success_url: `${YOUR_DOMAIN}?session_id={CHECKOUT_SESSION_ID}`, // Success redirect
-      cancel_url: `${YOUR_DOMAIN}?payment-cancelled`,
+      success_url: success_url,
+      cancel_url: cancel_url,
       metadata: {
         userId,
         membershipName
@@ -432,7 +432,7 @@ export const getUserSubscriptionDetails = async (
 // };
 
 export const handlePaymentComplete = async (req: Request, res: Response) => {
-  const { session_id } = req.body;
+  const { session_id } = req.params;
 
   try {
     if (!session_id) {
