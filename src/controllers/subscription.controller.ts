@@ -104,8 +104,6 @@ export const createSubscription = [
 ];
 
 
-
-
 export const getUserSubscription = async (req: Request, res: Response) => {
   try {
     const token =
@@ -131,9 +129,10 @@ export const getUserSubscription = async (req: Request, res: Response) => {
     console.log("This is test broooooo",test);
 
     
-    res.status(201).json({
+    res.status(200).json({
       success: true,
-      message: "Subscriptions fetched successfullyyyyyyyy",
+      message: "Subscriptions fetched successfully",
+
       subscriptions: userSubscription
     });
   } catch (error) {

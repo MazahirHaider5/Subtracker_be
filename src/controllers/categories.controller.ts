@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import Category from "../models/categories.model";
 import jwt from "jsonwebtoken";
+import subscriptionsModel from "../models/subscriptions.model";
 
 export const createCategory = async (req: Request, res: Response) => {
   try {
@@ -80,48 +81,69 @@ export const getLoggedInUserCategories = async (req: Request, res: Response) => 
     const token =
       req.cookies.accessToken ||
       (req.headers.authorization && req.headers.authorization.split(" ")[1]);
+
     if (!token) {
       return res.status(401).json({
         success: false,
-        message: "Unauthorized, token required"
+        message: "Unauthorized, token required",
       });
     }
+
     const decodedToken = jwt.verify(token, process.env.JWT_SECRET!) as {
       id: string;
       email: string;
     };
     const userId = decodedToken.id;
-    const categories = await Category.find({ user: userId })
-      .populate("subscriptions")
-      .lean()
-      .exec();
-      
-      const updatedCategories = categories.map(category => {
-        const activeSubscriptions = category.subscriptions.filter(
-          (sub) => sub.is_paid === true
-        ).length;
-        const monthlyDataArray = Object.entries(category.monthly_data || {}).map(
-          ([date, data]: [string, any]) => ({
-            date,
-            total_spent: data.total_spent,
-            subscriptions: data.subscriptions
-          })
-        );
-        return {
-          ...category,
-          active_subscriptions: activeSubscriptions,
-          monthly_data: monthlyDataArray
-        };
-      });
+
+    // Step 1: Get all subscriptions of the user
+    const userSubscriptions = await subscriptionsModel.find({ user: userId }).lean();
+
+    // Step 2: Group subscriptions by category
+    const categoryMap = new Map<string, any[]>();
+    let totalSpent = 0;
+
+    userSubscriptions.forEach((sub) => {
+      const ctgId = sub.subscription_ctg.toString();
+      if (!categoryMap.has(ctgId)) {
+        categoryMap.set(ctgId, []);
+      }
+      categoryMap.get(ctgId)!.push(sub);
+      totalSpent += sub.subscription_price || 0;
+    });
+
+    // Step 3: Fetch matching categories from categoryMap keys
+    const categoryIds = Array.from(categoryMap.keys());
+    const categories = await Category.find({ _id: { $in: categoryIds } }).lean();
+
+    const result = categories.map((category) => {
+      const subs = categoryMap.get(category._id.toString()) || [];
+      const categoryTotal = subs.reduce((sum, sub) => sum + (sub.subscription_price || 0), 0);
+
+      return {
+        category_id: category._id,
+        category_name: category.category_name,
+        category_desc: category.category_desc,
+        category_image: category.category_image,
+        total_subscriptions: subs.length,
+        total_subscription_cost: categoryTotal,
+        subscriptions: subs.map((sub) => ({
+          subscription_name: sub.subscription_name,
+          subscription_price: sub.subscription_price,
+        })),
+      };
+    });
+
     res.status(200).json({
       success: true,
-      message: "Categories fetched successfully",
-      categories: updatedCategories
+      message: "Categories and subscriptions fetched successfully",
+      total_spent: totalSpent,
+      categories: result,
     });
   } catch (error) {
+    console.error("Error fetching categories:", error);
     res.status(500).json({
       success: false,
-      message: "Error fetching categories"
+      message: "Error fetching categories",
     });
   }
 };

@@ -160,7 +160,8 @@ const createCheckoutSession = (req, res) => __awaiter(void 0, void 0, void 0, fu
     try {
         const buyer = req.user;
         const userId = buyer.id.toString();
-        const { price, membershipName } = req.body;
+        const { price, membershipName, success_url, cancel_url } = req.body;
+
         if (!price || !membershipName) {
             return res.status(400).json({ error: "Missing required fields." });
         }
@@ -197,8 +198,10 @@ const createCheckoutSession = (req, res) => __awaiter(void 0, void 0, void 0, fu
                 }
             ],
             mode: "payment",
-            success_url: `${YOUR_DOMAIN}?session_id={CHECKOUT_SESSION_ID}`, // Success redirect
-            cancel_url: `${YOUR_DOMAIN}?payment-cancelled`,
+
+            success_url: success_url,
+            cancel_url: cancel_url,
+
             metadata: {
                 userId,
                 membershipName
@@ -399,7 +402,8 @@ exports.getUserSubscriptionDetails = getUserSubscriptionDetails;
 //   }
 // };
 const handlePaymentComplete = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { session_id } = req.body;
+    const { session_id } = req.params;
+
     try {
         if (!session_id) {
             return res.status(400).json({
