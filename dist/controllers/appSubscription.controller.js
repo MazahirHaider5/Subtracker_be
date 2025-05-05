@@ -170,7 +170,6 @@ const createCheckoutSession = (req, res) => __awaiter(void 0, void 0, void 0, fu
             return res.status(404).json({ error: "User not found." });
         }
         let stripeCustomerId = user.stripeCustomerId;
-        console.log("This is user Stripe customer Id", stripeCustomerId);
         if (!stripeCustomerId) {
             const customer = yield stripe.customers.create({
                 email: user.email,
@@ -416,6 +415,7 @@ const handlePaymentComplete = (req, res) => __awaiter(void 0, void 0, void 0, fu
             expand: ['payment_intent']
         });
         const { userId, membershipName } = session.metadata || {};
+        console.log("This is user Id session creating", userId);
         if (!session.payment_intent) {
             return res.status(400).json({
                 success: false,
@@ -440,12 +440,12 @@ const handlePaymentComplete = (req, res) => __awaiter(void 0, void 0, void 0, fu
                 message: 'User not found'
             });
         }
-        if (user.isPaymentComplete === 'completed') {
-            return res.status(400).json({
-                success: false,
-                message: 'Payment has already been processed'
-            });
-        }
+        // if (user.isPaymentComplete === 'completed') {
+        //   return res.status(400).json({ 
+        //     success: false, 
+        //     message: 'Payment has already been processed' 
+        //   });
+        // }
         // Update user with payment completion and membership details
         const updatedUser = yield users_model_1.default.findByIdAndUpdate(userId, {
             $set: {
