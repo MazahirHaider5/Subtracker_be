@@ -4,6 +4,7 @@ import Category from "../models/categories.model";
 import { upload } from "../config/multer";
 import jwt from "jsonwebtoken";
 import { Types } from "mongoose";
+import usersModel from "../models/users.model";
 
 
 export const createSubscription = [
@@ -22,11 +23,63 @@ export const createSubscription = [
           message: "Unauthorized, No token provided"
         });
       }
+
       const decodedToken = jwt.verify(token, process.env.JWT_SECRET!) as {
         id: string;
         email: string;
       };
       const userId = decodedToken.id;
+
+      const user = await usersModel.findById(userId);
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: "User not found"
+        });
+      }
+
+      // Check if user's plan is still active
+      const { membershipName, purchaseDate, isPaymentComplete } = user;
+      if (isPaymentComplete !== "completed") {
+        return res.status(403).json({
+          success: false,
+          message: "Payment is incomplete. Please complete payment to continue."
+        });
+      }
+
+      const purchaseDateObj = new Date(user.purchaseDate);
+      let expiryDate = new Date(purchaseDateObj);
+
+      switch (membershipName) {
+        case "free_trial":
+          expiryDate.setDate(expiryDate.getDate() + 14);
+          break;
+        case "month":
+          expiryDate.setMonth(expiryDate.getMonth() + 1);
+          break;
+        case "year":
+          expiryDate.setFullYear(expiryDate.getFullYear() + 1);
+          break;
+        case "lifetime":
+          expiryDate = new Date("2099-12-31");
+          break;
+        default:
+          return res.status(400).json({
+            success: false,
+            message: "Invalid membership type"
+          });
+      }
+      console.log("This is expiry date", expiryDate);
+      
+
+      if (new Date() > expiryDate) {
+        return res.status(403).json({
+          success: false,
+          message: "Your subscription plan has expired. Please renew to continue."
+        });
+      }
+
+      // Extract form fields
       const {
         subscription_name,
         subscription_ctg,
@@ -38,7 +91,7 @@ export const createSubscription = [
         subscription_reminder
       } = req.body;
 
-      // First try to find category by ID, if that fails try by name
+      // Find or resolve the subscription category
       let category;
       if (Types.ObjectId.isValid(subscription_ctg)) {
         category = await Category.findById(subscription_ctg);
@@ -52,9 +105,11 @@ export const createSubscription = [
           message: "Category not found"
         });
       }
+
       const files = req.files as { [fieldname: string]: Express.Multer.File[] };
       const photo = files?.photo?.[0]?.path || null;
       const pdf = files?.pdf?.map((file) => file.path) || [];
+
       const newSubscription = new Subscription({
         user: userId,
         subscription_name,
@@ -68,26 +123,31 @@ export const createSubscription = [
         photo,
         pdf
       });
+
       const savedSubscription = await newSubscription.save();
+
       if (!category.monthly_data || !(category.monthly_data instanceof Map)) {
         category.monthly_data = new Map<string, { total_spent: number; subscriptions: Types.ObjectId[] }>();
       }
+
       const monthYear = new Date(subscription_start).toISOString().slice(0, 7);
       if (!category.monthly_data.has(monthYear)) {
         category.monthly_data.set(monthYear, { total_spent: 0, subscriptions: [] });
       }
-      const monthlyEntry = category.monthly_data.get(monthYear) as { total_spent: number; subscriptions: Types.ObjectId[] };
+
+      const monthlyEntry = category.monthly_data.get(monthYear) as {
+        total_spent: number;
+        subscriptions: Types.ObjectId[];
+      };
       monthlyEntry.subscriptions.push(savedSubscription._id as Types.ObjectId);
       monthlyEntry.total_spent += savedSubscription.subscription_price;
-
       category.monthly_data.set(monthYear, monthlyEntry);
 
-     category.subscriptions.push(savedSubscription as ISubscriptions);
-    category.markModified("monthly_data");
+      category.subscriptions.push(savedSubscription as ISubscriptions);
+      category.markModified("monthly_data");
 
-      console.log("Before save: ", category.monthly_data);
       await category.save();
-      console.log("After save: ", category.monthly_data);
+
       res.status(200).json({
         success: true,
         message: "Subscription created successfully",
@@ -102,6 +162,7 @@ export const createSubscription = [
     }
   }
 ];
+
 
 export const getUserSubscription = async (req: Request, res: Response) => {
   try {

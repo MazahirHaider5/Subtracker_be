@@ -18,6 +18,7 @@ const categories_model_1 = __importDefault(require("../models/categories.model")
 const multer_1 = require("../config/multer");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const mongoose_1 = require("mongoose");
+const users_model_1 = __importDefault(require("../models/users.model"));
 exports.createSubscription = [
     multer_1.upload.fields([
         { name: "photo", maxCount: 1 },
@@ -36,8 +37,52 @@ exports.createSubscription = [
             }
             const decodedToken = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET);
             const userId = decodedToken.id;
+            const user = yield users_model_1.default.findById(userId);
+            if (!user) {
+                return res.status(404).json({
+                    success: false,
+                    message: "User not found"
+                });
+            }
+            // Check if user's plan is still active
+            const { membershipName, purchaseDate, isPaymentComplete } = user;
+            if (isPaymentComplete !== "completed") {
+                return res.status(403).json({
+                    success: false,
+                    message: "Payment is incomplete. Please complete payment to continue."
+                });
+            }
+            const purchaseDateObj = new Date(user.purchaseDate);
+            let expiryDate = new Date(purchaseDateObj);
+            switch (membershipName) {
+                case "free_trial":
+                    expiryDate.setDate(expiryDate.getDate() + 14);
+                    break;
+                case "month":
+                    expiryDate.setMonth(expiryDate.getMonth() + 1);
+                    break;
+                case "year":
+                    expiryDate.setFullYear(expiryDate.getFullYear() + 1);
+                    break;
+                case "lifetime":
+                    expiryDate = new Date("2099-12-31");
+                    break;
+                default:
+                    return res.status(400).json({
+                        success: false,
+                        message: "Invalid membership type"
+                    });
+            }
+            console.log("This is expiry date", expiryDate);
+            if (new Date() > expiryDate) {
+                return res.status(403).json({
+                    success: false,
+                    message: "Your subscription plan has expired. Please renew to continue."
+                });
+            }
+            // Extract form fields
             const { subscription_name, subscription_ctg, subscription_desc, subscription_start, subscription_end, subscription_billing_cycle, subscription_price, subscription_reminder } = req.body;
-            // First try to find category by ID, if that fails try by name
+            // Find or resolve the subscription category
             let category;
             if (mongoose_1.Types.ObjectId.isValid(subscription_ctg)) {
                 category = yield categories_model_1.default.findById(subscription_ctg);
@@ -81,9 +126,7 @@ exports.createSubscription = [
             category.monthly_data.set(monthYear, monthlyEntry);
             category.subscriptions.push(savedSubscription);
             category.markModified("monthly_data");
-            console.log("Before save: ", category.monthly_data);
             yield category.save();
-            console.log("After save: ", category.monthly_data);
             res.status(200).json({
                 success: true,
                 message: "Subscription created successfully",

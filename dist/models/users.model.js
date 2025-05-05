@@ -124,15 +124,17 @@ const UserSchema = new mongoose_1.Schema({
     stripeCustomerId: { type: String },
     membershipName: {
         type: String,
-        default: "Free"
+        enum: ["month", "year", "lifetime", "free_trial"],
+        default: "free_trial"
     },
     lastTransactionId: { type: String },
     purchaseDate: { type: String },
     credits: { type: Number, default: 1000 },
     isPaymentComplete: {
         type: String,
-        enum: ["pending, completed"]
-    },
+        enum: ["pending", "completed"],
+        default: "pending"
+    }
 }, {
     timestamps: true
 });
