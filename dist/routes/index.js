@@ -13,6 +13,7 @@ const adminDashboard_routes_1 = __importDefault(require("./adminDashboard.routes
 const complaint_routes_1 = __importDefault(require("./complaint.routes"));
 const activties_routes_1 = __importDefault(require("./activties.routes"));
 const appSubscription_routes_1 = __importDefault(require("./appSubscription.routes"));
+const redirect_route_1 = __importDefault(require("./redirect.route"));
 const router = (0, express_1.Router)();
 router.use("/auth", auth_routes_1.default);
 router.use("/users", user_routes_1.default);
@@ -23,4 +24,5 @@ router.use("/admin", adminDashboard_routes_1.default);
 router.use("/complain", complaint_routes_1.default);
 router.use("/activities", activties_routes_1.default);
 router.use("/appSubscriptions", appSubscription_routes_1.default);
+router.use('/redirect', redirect_route_1.default);
 exports.default = router;

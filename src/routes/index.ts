@@ -8,7 +8,7 @@ import adminRoutes from "./adminDashboard.routes";
 import complaintRoutes from "./complaint.routes";
 import activitiesRoutes from "./activties.routes";
 import appSubscription from "./appSubscription.routes";
-
+import redirectRoutes from "./redirect.route"
 const router = Router();
 
 router.use("/auth", authRoutes);
@@ -20,5 +20,6 @@ router.use("/admin", adminRoutes);
 router.use("/complain", complaintRoutes);
 router.use("/activities", activitiesRoutes);
 router.use("/appSubscriptions", appSubscription);
+router.use('/redirect', redirectRoutes);
 
 export default router;

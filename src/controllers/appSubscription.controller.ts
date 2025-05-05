@@ -164,7 +164,7 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
   try {
     const buyer = req.user as IUser;
     const userId = buyer.id.toString();
-    const { price, membershipName, success_url, cancel_url } = req.body;
+    const { price, membershipName } = req.body;
     if (!price || !membershipName) {
       return res.status(400).json({ error: "Missing required fields." });
     }
@@ -191,6 +191,11 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
         name: `Purchase  ${membershipName}`
       }
     });
+
+    const successUrl = `${process.env.BACKEND_URI}/redirect/success?session_id={CHECKOUT_SESSION_ID}`;
+    const cancelUrl = `${process.env.BACKEND_URI}/redirect/cancel?session_id={CHECKOUT_SESSION_ID}`;
+    
+
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       customer: stripeCustomerId,
@@ -201,8 +206,8 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
         }
       ],
       mode: "payment",
-      success_url: success_url,
-      cancel_url: cancel_url,
+      success_url: successUrl,
+      cancel_url: cancelUrl,
       metadata: {
         userId,
         membershipName
