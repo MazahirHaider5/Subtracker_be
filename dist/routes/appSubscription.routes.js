@@ -15,6 +15,8 @@ router.get("/getPlans", appSubscription_controller_1.getAllPlans);
 router.post("/checkout", authenticate_1.verifyToken, appSubscription_controller_1.createCheckoutSession);
 router.get("/myPlanDetails", authenticate_1.verifyToken, appSubscription_controller_1.getUserSubscriptionDetails);
 // router.post('/webhook', express.raw({type: 'application/json'}), handleStripeWebhook);
+
 router.get('/paymentComplete/:session_id', appSubscription_controller_1.handlePaymentComplete);
+
 // router.get("/updateDetails", verifyToken, fetchCheckoutSessionDetails);
 exports.default = router;

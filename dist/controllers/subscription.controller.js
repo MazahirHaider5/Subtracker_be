@@ -118,9 +118,11 @@ const getUserSubscription = (req, res) => __awaiter(void 0, void 0, void 0, func
         });
         const test = yield subscriptions_model_1.default.findOne({ subscription_name: "Hisham Sub 3" }).populate("subscription_ctg");
         console.log("This is test broooooo", test);
+
         res.status(200).json({
+
             success: true,
-            message: "Subscriptions fetched successfully",
+            message: "Subscriptions fetched successfullyyyyyyyy",
             subscriptions: userSubscription
         });
     }

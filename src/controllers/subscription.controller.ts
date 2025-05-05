@@ -103,6 +103,7 @@ export const createSubscription = [
   }
 ];
 
+
 export const getUserSubscription = async (req: Request, res: Response) => {
   try {
     const token =
@@ -126,10 +127,12 @@ export const getUserSubscription = async (req: Request, res: Response) => {
     });
     const test = await Subscription.findOne({ subscription_name: "Hisham Sub 3" }).populate("subscription_ctg");
     console.log("This is test broooooo",test);
+
     
     res.status(200).json({
       success: true,
       message: "Subscriptions fetched successfully",
+
       subscriptions: userSubscription
     });
   } catch (error) {
