@@ -111,7 +111,13 @@ const getUserSubscription = (req, res) => __awaiter(void 0, void 0, void 0, func
         }
         const decodeToken = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET);
         const userId = decodeToken.id;
-        const userSubscription = yield subscriptions_model_1.default.find({ user: userId });
+        const userSubscription = yield subscriptions_model_1.default.find({ user: userId })
+            .populate({
+            path: "subscription_ctg",
+            select: "category_name"
+        });
+        const test = yield subscriptions_model_1.default.findOne({ subscription_name: "Hisham Sub 3" }).populate("subscription_ctg");
+        console.log("This is test broooooo", test);
         res.status(200).json({
             success: true,
             message: "Subscriptions fetched successfully",

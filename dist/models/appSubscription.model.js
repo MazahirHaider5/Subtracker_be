@@ -7,6 +7,7 @@ const mongoose_1 = __importDefault(require("mongoose"));
 const CardSchema = new mongoose_1.default.Schema({
     name: {
         type: String,
+        enum: ["month", "year", "lifetime", "free_trial"],
         required: true
     },
     heading: {
@@ -41,7 +42,7 @@ const CardSchema = new mongoose_1.default.Schema({
     },
     durationUnit: {
         type: String,
-        enum: ["month", "year"],
+        enum: ["month", "year", "lifetime"],
         default: "month"
     },
     priceId: {
