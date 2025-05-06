@@ -6,7 +6,6 @@ import jwt from "jsonwebtoken";
 import { Types } from "mongoose";
 import usersModel from "../models/users.model";
 
-
 export const createSubscription = [
   upload.fields([
     { name: "photo", maxCount: 1 },
@@ -39,15 +38,32 @@ export const createSubscription = [
       }
 
       // Check if user's plan is still active
-      const { membershipName, purchaseDate, isPaymentComplete } = user;
-      if (isPaymentComplete !== "completed") {
+      const { membershipName, purchaseDate, isPaymentComplete, signup_date } =
+        user;
+
+      const now = new Date();
+
+      // Calculate free trial expiry if applicable
+      let isFreeTrialActive = false;
+      if (membershipName === "free_trial" && signup_date) {
+        const signupDateObj = new Date(signup_date);
+        const trialExpiry = new Date(signupDateObj);
+        trialExpiry.setDate(trialExpiry.getDate() + 14);
+        if (now <= trialExpiry) {
+          isFreeTrialActive = true;
+        }
+      }
+
+      // Block user if payment is not completed and trial is not active
+      if (!isFreeTrialActive && isPaymentComplete !== "completed") {
         return res.status(403).json({
           success: false,
           message: "Payment is incomplete. Please complete payment to continue."
         });
       }
 
-      const purchaseDateObj = new Date(user.purchaseDate);
+      // Calculate subscription expiry
+      const purchaseDateObj = new Date(purchaseDate);
       let expiryDate = new Date(purchaseDateObj);
 
       switch (membershipName) {
@@ -70,12 +86,12 @@ export const createSubscription = [
           });
       }
       console.log("This is expiry date", expiryDate);
-      
 
       if (new Date() > expiryDate) {
         return res.status(403).json({
           success: false,
-          message: "Your subscription plan has expired. Please renew to continue."
+          message:
+            "Your subscription plan has expired. Please renew to continue."
         });
       }
 
@@ -127,12 +143,18 @@ export const createSubscription = [
       const savedSubscription = await newSubscription.save();
 
       if (!category.monthly_data || !(category.monthly_data instanceof Map)) {
-        category.monthly_data = new Map<string, { total_spent: number; subscriptions: Types.ObjectId[] }>();
+        category.monthly_data = new Map<
+          string,
+          { total_spent: number; subscriptions: Types.ObjectId[] }
+        >();
       }
 
       const monthYear = new Date(subscription_start).toISOString().slice(0, 7);
       if (!category.monthly_data.has(monthYear)) {
-        category.monthly_data.set(monthYear, { total_spent: 0, subscriptions: [] });
+        category.monthly_data.set(monthYear, {
+          total_spent: 0,
+          subscriptions: []
+        });
       }
 
       const monthlyEntry = category.monthly_data.get(monthYear) as {
@@ -163,7 +185,6 @@ export const createSubscription = [
   }
 ];
 
-
 export const getUserSubscription = async (req: Request, res: Response) => {
   try {
     const token =
@@ -180,15 +201,17 @@ export const getUserSubscription = async (req: Request, res: Response) => {
       email: string;
     };
     const userId = decodeToken.id;
-    const userSubscription = await Subscription.find({ user: userId })
-    .populate({
-      path: "subscription_ctg",
-      select: "category_name"
-    });
-    const test = await Subscription.findOne({ subscription_name: "Hisham Sub 3" }).populate("subscription_ctg");
-    console.log("This is test broooooo",test);
+    const userSubscription = await Subscription.find({ user: userId }).populate(
+      {
+        path: "subscription_ctg",
+        select: "category_name"
+      }
+    );
+    const test = await Subscription.findOne({
+      subscription_name: "Hisham Sub 3"
+    }).populate("subscription_ctg");
+    console.log("This is test broooooo", test);
 
-    
     res.status(200).json({
       success: true,
       message: "Subscriptions fetched successfully",
@@ -373,4 +396,3 @@ export const updatePaidStatus = async (req: Request, res: Response) => {
     });
   }
 };
-
