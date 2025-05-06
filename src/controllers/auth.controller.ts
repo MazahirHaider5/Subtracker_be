@@ -314,7 +314,7 @@ export const logout = async (req: Request, res: Response) => {
 };
 
 export const socialLogin = async (req: Request, res: Response) => {
-  const { name, email, photo, provider } = req.body;
+  const { name, email, photo, provider,fcmToken } = req.body;
 
   if (!email || !provider) {
     return res
@@ -335,6 +335,7 @@ export const socialLogin = async (req: Request, res: Response) => {
         last_login: new Date(),
         is_verified: true,
         is_active: true,
+        fcmToken
       });
 
       await user.save();

@@ -45,14 +45,27 @@ exports.createSubscription = [
                 });
             }
             // Check if user's plan is still active
-            const { membershipName, purchaseDate, isPaymentComplete } = user;
-            if (isPaymentComplete !== "completed") {
+            const { membershipName, purchaseDate, isPaymentComplete, signup_date } = user;
+            const now = new Date();
+            // Calculate free trial expiry if applicable
+            let isFreeTrialActive = false;
+            if (membershipName === "free_trial" && signup_date) {
+                const signupDateObj = new Date(signup_date);
+                const trialExpiry = new Date(signupDateObj);
+                trialExpiry.setDate(trialExpiry.getDate() + 14);
+                if (now <= trialExpiry) {
+                    isFreeTrialActive = true;
+                }
+            }
+            // Block user if payment is not completed and trial is not active
+            if (!isFreeTrialActive && isPaymentComplete !== "completed") {
                 return res.status(403).json({
                     success: false,
                     message: "Payment is incomplete. Please complete payment to continue."
                 });
             }
-            const purchaseDateObj = new Date(user.purchaseDate);
+            // Calculate subscription expiry
+            const purchaseDateObj = new Date(purchaseDate);
             let expiryDate = new Date(purchaseDateObj);
             switch (membershipName) {
                 case "free_trial":
@@ -118,7 +131,10 @@ exports.createSubscription = [
             }
             const monthYear = new Date(subscription_start).toISOString().slice(0, 7);
             if (!category.monthly_data.has(monthYear)) {
-                category.monthly_data.set(monthYear, { total_spent: 0, subscriptions: [] });
+                category.monthly_data.set(monthYear, {
+                    total_spent: 0,
+                    subscriptions: []
+                });
             }
             const monthlyEntry = category.monthly_data.get(monthYear);
             monthlyEntry.subscriptions.push(savedSubscription._id);
@@ -154,12 +170,13 @@ const getUserSubscription = (req, res) => __awaiter(void 0, void 0, void 0, func
         }
         const decodeToken = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET);
         const userId = decodeToken.id;
-        const userSubscription = yield subscriptions_model_1.default.find({ user: userId })
-            .populate({
+        const userSubscription = yield subscriptions_model_1.default.find({ user: userId }).populate({
             path: "subscription_ctg",
             select: "category_name"
         });
-        const test = yield subscriptions_model_1.default.findOne({ subscription_name: "Hisham Sub 3" }).populate("subscription_ctg");
+        const test = yield subscriptions_model_1.default.findOne({
+            subscription_name: "Hisham Sub 3"
+        }).populate("subscription_ctg");
         console.log("This is test broooooo", test);
         res.status(200).json({
             success: true,
