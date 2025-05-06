@@ -101,6 +101,7 @@ const verifySignupOtp = (req, res) => __awaiter(void 0, void 0, void 0, function
                 .json({ success: false, message: "otp is expired" });
         }
         user.is_verified = true;
+        user.signup_date = new Date();
         yield user.save();
         return res.status(200).json({
             success: true,
@@ -297,7 +298,7 @@ const logout = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 });
 exports.logout = logout;
 const socialLogin = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { name, email, photo, provider } = req.body;
+    const { name, email, photo, provider, fcmToken } = req.body;
     if (!email || !provider) {
         return res
             .status(400)
@@ -315,6 +316,7 @@ const socialLogin = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
                 last_login: new Date(),
                 is_verified: true,
                 is_active: true,
+                fcmToken
             });
             yield user.save();
         }
