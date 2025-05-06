@@ -101,6 +101,7 @@ export const verifySignupOtp = async (req: Request, res: Response) => {
         .json({ success: false, message: "otp is expired" });
     }
     user.is_verified = true;
+    user.signup_date = new Date();
     await user.save();
 
     return res.status(200).json({
