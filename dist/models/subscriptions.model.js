@@ -35,6 +35,10 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
 const SubscriptionSchema = new mongoose_1.Schema({
+    notified_1_month: { type: Boolean, default: false },
+    notified_1_week: { type: Boolean, default: false },
+    notified_3_days: { type: Boolean, default: false },
+    notified_1_day: { type: Boolean, default: false },
     user: {
         type: mongoose_1.default.Schema.Types.ObjectId,
         ref: "User",
