@@ -13,11 +13,20 @@ export interface ISubscriptions extends Document {
   is_paid: boolean;
   photo: string | null;
   pdf: string[] | null;
-  notifiedBeforeEnd: Boolean,
+  notifiedBeforeEnd: Boolean;
+  notified_1_month: Boolean;
+  notified_1_week: Boolean;
+  notified_3_days: Boolean;
+  notified_1_day: Boolean;
 }
 
 const SubscriptionSchema: Schema = new Schema<ISubscriptions>(
   {
+    notified_1_month: { type: Boolean, default: false },
+    notified_1_week: { type: Boolean, default: false },
+    notified_3_days: { type: Boolean, default: false },
+    notified_1_day: { type: Boolean, default: false },
+
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
